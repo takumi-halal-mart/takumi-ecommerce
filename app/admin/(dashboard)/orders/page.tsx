@@ -106,7 +106,7 @@ export default async function OrdersPage() {
 
                       {/* 4. Financials & Payment Method */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-white font-mono font-medium">${order.total_amount.toFixed(2)}</div>
+                        <div className="text-sm text-white font-mono font-medium">¥{order.total_amount.toLocaleString('ja-JP')}</div>
                         <div className="mt-1.5">
                           {order.payment_method === 'Stripe' ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-blue-950/30 text-blue-400 border border-blue-900/50">

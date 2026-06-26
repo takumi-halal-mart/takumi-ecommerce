@@ -11,10 +11,12 @@ export interface Product {
   image_url: string | null
   stock_count: number
   is_retail: boolean
-  retail_price: number
+  retail_price: number | null
   is_wholesale: boolean
   wholesale_price: number | null
   wholesale_moq: number
+  unit_type: string
+  category: string
 }
 
 /**
@@ -28,19 +30,25 @@ export async function createProduct(prevState: any, formData: FormData) {
     const name = formData.get('name') as string
     const description = formData.get('description') as string
     const stock_count = parseInt(formData.get('stock_count') as string || '0', 10)
-    const retail_price = parseFloat(formData.get('retail_price') as string)
+    const unit_type = (formData.get('unit_type') as string) || 'piece'
+    const category = (formData.get('category') as string) || 'Uncategorized'
     
-    // Checkboxes often send 'on' if checked
-    const is_wholesale = formData.get('is_wholesale') === 'on' || formData.get('is_wholesale') === 'true'
+    // Determine visibility and pricing
+    const visibility_mode = formData.get('visibility_mode') as string || 'both'
+    const is_retail = visibility_mode === 'retail' || visibility_mode === 'both'
+    const is_wholesale = visibility_mode === 'wholesale' || visibility_mode === 'both'
+    
+    const retail_priceRaw = formData.get('retail_price')
+    const retail_price = retail_priceRaw && is_retail ? parseFloat(retail_priceRaw as string) : null
     
     const wholesale_priceRaw = formData.get('wholesale_price')
-    const wholesale_price = wholesale_priceRaw ? parseFloat(wholesale_priceRaw as string) : null
+    const wholesale_price = wholesale_priceRaw && is_wholesale ? parseFloat(wholesale_priceRaw as string) : null
     
     const wholesale_moq = parseInt(formData.get('wholesale_moq') as string || '10', 10)
 
     // Basic validation
-    if (!name || isNaN(retail_price)) {
-      return { error: 'Name and valid retail price are required.' }
+    if (!name || (is_retail && retail_price === null) || (is_wholesale && wholesale_price === null)) {
+      return { error: 'Name and appropriate prices for the selected mode are required.' }
     }
 
     // 2. Handle Image Upload
@@ -72,10 +80,13 @@ export async function createProduct(prevState: any, formData: FormData) {
       name,
       description,
       stock_count,
+      is_retail,
       retail_price,
       is_wholesale,
       wholesale_price,
       wholesale_moq,
+      unit_type,
+      category,
       image_url
     })
 
@@ -159,5 +170,85 @@ export async function deleteProduct(productId: string, imageUrl: string | null) 
   } catch (error: any) {
     console.error('Delete product exception:', error)
     return { error: 'An unexpected error occurred while deleting the product.' }
+  }
+}
+
+/**
+ * Updates an existing product. Binds the productId.
+ */
+export async function updateProduct(productId: string, prevState: any, formData: FormData) {
+  try {
+    const supabase = await createClient()
+
+    const name = formData.get('name') as string
+    const description = formData.get('description') as string
+    const stock_count = parseInt(formData.get('stock_count') as string || '0', 10)
+    const unit_type = (formData.get('unit_type') as string) || 'piece'
+    const category = (formData.get('category') as string) || 'Uncategorized'
+    
+    // Determine visibility and pricing
+    const visibility_mode = formData.get('visibility_mode') as string || 'both'
+    const is_retail = visibility_mode === 'retail' || visibility_mode === 'both'
+    const is_wholesale = visibility_mode === 'wholesale' || visibility_mode === 'both'
+    
+    const retail_priceRaw = formData.get('retail_price')
+    const retail_price = retail_priceRaw && is_retail ? parseFloat(retail_priceRaw as string) : null
+    
+    const wholesale_priceRaw = formData.get('wholesale_price')
+    const wholesale_price = wholesale_priceRaw && is_wholesale ? parseFloat(wholesale_priceRaw as string) : null
+    
+    const wholesale_moq = parseInt(formData.get('wholesale_moq') as string || '10', 10)
+
+    if (!name || (is_retail && retail_price === null) || (is_wholesale && wholesale_price === null)) {
+      return { error: 'Name and appropriate prices for the selected mode are required.' }
+    }
+
+    const updatePayload: any = {
+      name,
+      description,
+      stock_count,
+      is_retail,
+      retail_price,
+      is_wholesale,
+      wholesale_price,
+      wholesale_moq,
+      unit_type,
+      category
+    }
+
+    // Handle Optional Image Upload (only updates image if a new one is provided)
+    const imageFile = formData.get('image') as File | null
+    if (imageFile && imageFile.size > 0) {
+      const fileExt = imageFile.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, imageFile)
+
+      if (uploadError) return { error: 'Failed to upload new product image.' }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName)
+
+      updatePayload.image_url = publicUrlData.publicUrl
+    }
+
+    const { error: updateError } = await supabase
+      .from('products')
+      .update(updatePayload)
+      .eq('id', productId)
+
+    if (updateError) {
+      console.error('Database update error:', updateError)
+      return { error: updateError.message }
+    }
+
+    revalidatePath('/admin/products')
+    return { success: true, error: '' }
+  } catch (error: any) {
+    console.error('Update product exception:', error)
+    return { error: 'An unexpected error occurred while updating the product.' }
   }
 }

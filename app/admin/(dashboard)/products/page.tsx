@@ -114,10 +114,10 @@ export default async function ProductsPage() {
 
                       {/* 2. Pricing Info */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-white font-medium">${product.retail_price.toFixed(2)}</div>
+                        <div className="text-sm text-white font-medium">{product.retail_price ? `¥${product.retail_price.toLocaleString('ja-JP')}` : <span className="text-gray-500 italic">Wholesale Only</span>}</div>
                         {product.is_wholesale && product.wholesale_price && (
                           <div className="text-[11px] text-brand-gold/80 mt-1 flex items-center font-medium tracking-wide">
-                            <span className="text-gray-500 mr-1 uppercase">WS:</span> ${product.wholesale_price.toFixed(2)} 
+                            <span className="text-gray-500 mr-1 uppercase">WS:</span> ¥{product.wholesale_price.toLocaleString('ja-JP')} 
                             <span className="text-gray-600 ml-1.5 opacity-70">(MOQ: {product.wholesale_moq})</span>
                           </div>
                         )}
