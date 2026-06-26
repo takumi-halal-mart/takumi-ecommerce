@@ -1,80 +1,105 @@
 'use client'
 
 import { useActionState } from 'react'
+import Image from 'next/image'
 import { login } from './actions'
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(login, { error: '' })
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700/50">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-4">
-            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Admin Access</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Sign in to manage the application backend</p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-brand-black p-4 relative overflow-hidden">
+      {/* Premium Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-brand-gold/5 blur-[120px]" />
+        <div className="absolute top-[80%] -right-[10%] w-[40%] h-[40%] rounded-full bg-brand-gold/5 blur-[100px]" />
+      </div>
 
-        <form action={formAction} className="space-y-5">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" htmlFor="email">
-              Email Address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none transition-all"
-              placeholder="admin@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white outline-none transition-all"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {state?.error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm border border-red-200 dark:border-red-800 flex items-start">
-              <svg className="w-5 h-5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <span>{state.error}</span>
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-brand-dark rounded-2xl shadow-2xl p-8 sm:p-10 border border-brand-border backdrop-blur-sm">
+          
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="relative w-24 h-24 mb-6">
+              {/* Glow behind image */}
+              <div className="absolute inset-0 bg-brand-gold/20 rounded-full blur-xl animate-pulse"></div>
+              <Image 
+                src="/takumi.webp" 
+                alt="Takumi Logo" 
+                fill
+                className="object-contain relative z-10 drop-shadow-2xl"
+                priority
+              />
             </div>
-          )}
+            <h1 className="text-3xl font-semibold tracking-tight text-white mb-2">
+              Takumi <span className="text-brand-gold italic font-serif">Admin</span>
+            </h1>
+            <p className="text-sm text-gray-400">
+              Sign in to manage the premium storefront.
+            </p>
+          </div>
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center mt-2"
-          >
-            {isPending ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <form action={formAction} className="space-y-6">
+            <div>
+              <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2" htmlFor="email">
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder-gray-600"
+                placeholder="admin@takumi.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder-gray-600"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {state?.error && (
+              <div className="p-3 rounded-lg bg-red-950/40 text-red-400 text-sm border border-red-900/50 flex items-start">
+                <svg className="w-5 h-5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                Authenticating...
-              </>
-            ) : (
-              'Sign In to Dashboard'
+                <span>{state.error}</span>
+              </div>
             )}
-          </button>
-        </form>
+
+            <button
+              type="submit"
+              disabled={isPending}
+              className="w-full py-3.5 px-4 bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-bold uppercase tracking-wider text-sm rounded-lg transition-all shadow-[0_0_20px_rgba(212,175,55,0.15)] hover:shadow-[0_0_25px_rgba(212,175,55,0.3)] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center mt-4"
+            >
+              {isPending ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Authenticating...
+                </>
+              ) : (
+                'Enter Dashboard'
+              )}
+            </button>
+          </form>
+        </div>
+        
+        {/* Footer Text */}
+        <p className="text-center text-xs text-gray-500 mt-8 tracking-wide">
+          &copy; {new Date().getFullYear()} Takumi. All rights reserved.
+        </p>
       </div>
     </div>
   )

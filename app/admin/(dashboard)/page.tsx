@@ -2,102 +2,119 @@ import { DollarSign, ShoppingCart, Users, TrendingUp } from 'lucide-react'
 
 export default function AdminDashboardPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Welcome back. Here's what's happening with your store today.</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-white">Dashboard Overview</h1>
+        <p className="text-sm text-gray-400 mt-2">Welcome back. Here is the current pulse of your premium storefront.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Stat Card 1 */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revenue</h3>
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-              <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <div className="bg-brand-dark p-6 rounded-2xl border border-brand-border shadow-lg transition-all hover:border-brand-gold/30 hover:shadow-[0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <DollarSign className="h-24 w-24 text-brand-gold rotate-12 transform scale-150" />
+          </div>
+          <div className="flex items-center justify-between relative z-10">
+            <h3 className="text-xs uppercase tracking-widest font-medium text-gray-400">Total Revenue</h3>
+            <div className="p-2 bg-brand-gold/10 border border-brand-gold/20 rounded-xl">
+              <DollarSign className="h-5 w-5 text-brand-gold" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-4">$24,562.00</p>
-          <div className="flex items-center mt-2 text-sm">
-            <span className="text-green-600 dark:text-green-400 font-medium flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1" />
+          <p className="text-3xl font-semibold text-white mt-5 relative z-10">$24,562.00</p>
+          <div className="flex items-center mt-3 text-sm relative z-10">
+            <span className="text-brand-gold font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1" />
               +12.5%
             </span>
-            <span className="text-gray-500 dark:text-gray-400 ml-2">from last month</span>
+            <span className="text-gray-500 ml-2 text-xs">from last month</span>
           </div>
         </div>
 
         {/* Stat Card 2 */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Orders</h3>
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-              <ShoppingCart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+        <div className="bg-brand-dark p-6 rounded-2xl border border-brand-border shadow-lg transition-all hover:border-brand-gold/30 hover:shadow-[0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <ShoppingCart className="h-24 w-24 text-brand-gold -rotate-12 transform scale-150" />
+          </div>
+          <div className="flex items-center justify-between relative z-10">
+            <h3 className="text-xs uppercase tracking-widest font-medium text-gray-400">Active Orders</h3>
+            <div className="p-2 bg-brand-gold/10 border border-brand-gold/20 rounded-xl">
+              <ShoppingCart className="h-5 w-5 text-brand-gold" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-4">156</p>
-          <div className="flex items-center mt-2 text-sm">
-            <span className="text-green-600 dark:text-green-400 font-medium flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1" />
+          <p className="text-3xl font-semibold text-white mt-5 relative z-10">156</p>
+          <div className="flex items-center mt-3 text-sm relative z-10">
+            <span className="text-brand-gold font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1" />
               +5.2%
             </span>
-            <span className="text-gray-500 dark:text-gray-400 ml-2">from last month</span>
+            <span className="text-gray-500 ml-2 text-xs">from last month</span>
           </div>
         </div>
 
         {/* Stat Card 3 */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Customers</h3>
-            <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
-              <Users className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        <div className="bg-brand-dark p-6 rounded-2xl border border-brand-border shadow-lg transition-all hover:border-brand-gold/30 hover:shadow-[0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Users className="h-24 w-24 text-brand-gold rotate-6 transform scale-150" />
+          </div>
+          <div className="flex items-center justify-between relative z-10">
+            <h3 className="text-xs uppercase tracking-widest font-medium text-gray-400">Total Customers</h3>
+            <div className="p-2 bg-brand-gold/10 border border-brand-gold/20 rounded-xl">
+              <Users className="h-5 w-5 text-brand-gold" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-4">2,345</p>
-          <div className="flex items-center mt-2 text-sm">
-            <span className="text-green-600 dark:text-green-400 font-medium flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1" />
+          <p className="text-3xl font-semibold text-white mt-5 relative z-10">2,345</p>
+          <div className="flex items-center mt-3 text-sm relative z-10">
+            <span className="text-brand-gold font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1" />
               +18.1%
             </span>
-            <span className="text-gray-500 dark:text-gray-400 ml-2">from last month</span>
+            <span className="text-gray-500 ml-2 text-xs">from last month</span>
           </div>
         </div>
 
         {/* Stat Card 4 */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Conversion Rate</h3>
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="bg-brand-dark p-6 rounded-2xl border border-brand-border shadow-lg transition-all hover:border-brand-gold/30 hover:shadow-[0_0_20px_rgba(212,175,55,0.05)] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <TrendingUp className="h-24 w-24 text-red-500/50 -rotate-12 transform scale-150" />
+          </div>
+          <div className="flex items-center justify-between relative z-10">
+            <h3 className="text-xs uppercase tracking-widest font-medium text-gray-400">Conversion Rate</h3>
+            <div className="p-2 bg-brand-gray border border-brand-border rounded-xl">
+              <TrendingUp className="h-5 w-5 text-red-400" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-4">3.24%</p>
-          <div className="flex items-center mt-2 text-sm">
-            <span className="text-red-600 dark:text-red-400 font-medium flex items-center">
-              <TrendingUp className="h-3 w-3 mr-1 rotate-180" />
+          <p className="text-3xl font-semibold text-white mt-5 relative z-10">3.24%</p>
+          <div className="flex items-center mt-3 text-sm relative z-10">
+            <span className="text-red-400 font-medium flex items-center">
+              <TrendingUp className="h-4 w-4 mr-1 rotate-180" />
               -1.1%
             </span>
-            <span className="text-gray-500 dark:text-gray-400 ml-2">from last month</span>
+            <span className="text-gray-500 ml-2 text-xs">from last month</span>
           </div>
         </div>
       </div>
 
       {/* Recent Activity Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden mt-8">
-        <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Recent Orders</h3>
-          <button className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+      <div className="bg-brand-dark rounded-2xl border border-brand-border shadow-lg overflow-hidden mt-8 relative">
+        <div className="px-8 py-6 border-b border-brand-border flex justify-between items-center bg-brand-gray/30 backdrop-blur-sm">
+          <h3 className="text-lg font-semibold text-white tracking-wide">Recent Orders</h3>
+          <button className="text-xs uppercase tracking-widest font-bold text-brand-gold hover:text-brand-gold-hover transition-colors">
             View All
           </button>
         </div>
-        <div className="p-6 flex flex-col items-center justify-center text-center py-16">
-          <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-100 dark:border-gray-700">
-            <ShoppingCart className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+        <div className="p-8 flex flex-col items-center justify-center text-center py-24 relative overflow-hidden">
+          {/* Subtle logo watermark in the background */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+             <ShoppingCart className="w-64 h-64 text-white" />
           </div>
-          <p className="text-gray-900 dark:text-white font-medium text-lg">No orders yet</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
-            When your customers place an order, it will appear here in the dashboard.
+          
+          <div className="w-20 h-20 bg-brand-gray rounded-full flex items-center justify-center mb-6 border border-brand-border shadow-inner relative z-10">
+            <ShoppingCart className="h-8 w-8 text-brand-gold" />
+          </div>
+          <p className="text-white font-semibold text-xl relative z-10">No orders yet</p>
+          <p className="text-sm text-gray-400 mt-2 max-w-sm relative z-10 leading-relaxed">
+            When your exclusive clientele begins placing orders, they will appear elegantly documented right here.
           </p>
         </div>
       </div>
