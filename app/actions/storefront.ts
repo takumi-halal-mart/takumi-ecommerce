@@ -162,3 +162,127 @@ export async function getHomepageCategoryProducts() {
     return { success: false, data: null, error: 'An unexpected error occurred.' }
   }
 }
+
+export interface StoreSettings {
+  delivery_fee: number
+  free_shipping_threshold: number
+  is_store_open: boolean
+  whatsapp_number: string
+}
+
+export async function getStoreSettings() {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('store_settings')
+      .select('*')
+      .eq('id', 1)
+      .single()
+
+    if (error) {
+      console.error('Supabase error fetching store settings:', error)
+      return { success: false, data: null, error: 'Failed to fetch settings.' }
+    }
+
+    return { success: true, data: data as StoreSettings, error: null }
+  } catch (error: any) {
+    console.error('Exception fetching store settings:', error)
+    return { success: false, data: null, error: 'An unexpected error occurred.' }
+  }
+}
+
+export async function getProductById(productId: string) {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .eq('is_retail', true)
+      .single()
+
+    if (error) {
+      console.error('Supabase error fetching product:', error)
+      return { success: false, data: null, error: 'Failed to fetch product.' }
+    }
+
+    return { success: true, data: data as StorefrontProduct, error: null }
+  } catch (error: any) {
+    console.error('Exception fetching product:', error)
+    return { success: false, data: null, error: 'An unexpected error occurred.' }
+  }
+}
+
+export async function getRelatedProducts(category: string, excludeId: string) {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_retail', true)
+      .eq('category', category)
+      .neq('id', excludeId)
+      .limit(4)
+
+    if (error) {
+      console.error('Supabase error fetching related products:', error)
+      return { success: false, data: null, error: 'Failed to fetch related products.' }
+    }
+
+    return { success: true, data: data as StorefrontProduct[], error: null }
+  } catch (error: any) {
+    console.error('Exception fetching related products:', error)
+    return { success: false, data: null, error: 'An unexpected error occurred.' }
+  }
+}
+
+export async function validateCouponCode(code: string, subtotal: number) {
+  try {
+    const supabase = await createClient()
+    const { data: coupon, error } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .single()
+
+    if (error || !coupon) {
+      return { success: false, error: 'Invalid coupon code.' }
+    }
+
+    if (!coupon.is_active) {
+      return { success: false, error: 'This coupon is no longer active.' }
+    }
+
+    if (subtotal < coupon.min_spend) {
+      return { success: false, error: `Minimum spend of ¥${coupon.min_spend} required for this coupon.` }
+    }
+
+    if (coupon.expiration_date) {
+      // Set the expiration date to the very end of the day (23:59:59.999) 
+      // so the coupon remains valid on its actual expiration date.
+      const expiryDate = new Date(coupon.expiration_date)
+      expiryDate.setUTCHours(23, 59, 59, 999)
+      
+      if (expiryDate < new Date()) {
+        return { success: false, error: 'This coupon has expired.' }
+      }
+    }
+
+    if (coupon.usage_limit && coupon.times_used >= coupon.usage_limit) {
+      return { success: false, error: 'This coupon has reached its usage limit.' }
+    }
+
+    return { 
+      success: true, 
+      coupon: {
+        id: coupon.id,
+        code: coupon.code,
+        discount_type: coupon.discount_type,
+        discount_value: coupon.discount_value
+      }
+    }
+  } catch (error: any) {
+    console.error('Exception validating coupon:', error)
+    return { success: false, error: 'An unexpected error occurred.' }
+  }
+}

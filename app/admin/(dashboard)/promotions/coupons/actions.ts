@@ -67,7 +67,7 @@ export async function createCoupon(prevState: any, formData: FormData) {
     // 3. Gracefully handle null values for constraints
     const expiration_dateRaw = formData.get('expiration_date') as string
     const expiration_date = (expiration_dateRaw && expiration_dateRaw.trim() !== '') 
-      ? new Date(expiration_dateRaw).toISOString() 
+      ? expiration_dateRaw // Pass the YYYY-MM-DD string directly to Supabase
       : null
 
     const usage_limitRaw = formData.get('usage_limit') as string

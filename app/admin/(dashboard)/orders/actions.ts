@@ -69,6 +69,42 @@ export async function getOrders(): Promise<{ data: Order[] | null; error: string
 }
 
 /**
+ * Fetches a single order by ID, including its nested order_items.
+ */
+export async function getOrderById(orderId: string): Promise<{ data: Order | null; error: string | null }> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        order_items (
+          id,
+          quantity,
+          price_at_purchase,
+          products (
+            name,
+            image_url
+          )
+        )
+      `)
+      .eq('id', orderId)
+      .single()
+
+    if (error) {
+      console.error('Failed to fetch order:', error)
+      return { data: null, error: error.message }
+    }
+
+    return { data: data as unknown as Order, error: null }
+  } catch (error: any) {
+    console.error('getOrderById exception:', error)
+    return { data: null, error: 'An unexpected error occurred while fetching the order.' }
+  }
+}
+
+/**
  * Updates the fulfillment status of a specific order.
  */
 export async function updateOrderStatus(orderId: string, newStatus: 'Pending' | 'Shipped' | 'Completed') {

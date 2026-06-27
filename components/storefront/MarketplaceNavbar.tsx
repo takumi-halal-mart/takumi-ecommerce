@@ -3,9 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ShoppingCart } from 'lucide-react'
+import { useCart } from '@/components/providers/CartProvider'
 
 export function MarketplaceNavbar() {
   const pathname = usePathname()
+  const { cartCount } = useCart()
 
   return (
     <>
@@ -59,9 +61,11 @@ export function MarketplaceNavbar() {
               <Link href="/cart" className="relative hover:text-black transition-colors p-1 group" aria-label="Shopping Cart">
                 <ShoppingCart className="w-6 h-6 group-hover:scale-110 transition-transform" />
                 {/* Marketplace style cart count badge */}
-                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm leading-none min-w-[20px] text-center">
-                  2
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm leading-none min-w-[20px] text-center">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             </div>
             

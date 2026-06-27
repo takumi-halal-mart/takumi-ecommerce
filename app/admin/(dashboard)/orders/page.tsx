@@ -1,6 +1,8 @@
 import { getOrders, deleteOrder } from './actions'
 import { StatusDropdown } from './StatusDropdown'
-import { Trash2, BoxSelect, MapPin, Phone, CreditCard, Calendar } from 'lucide-react'
+import { Trash2, BoxSelect, MapPin, Phone, CreditCard, Calendar, Eye } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Orders | Takumi Admin',
@@ -56,7 +58,7 @@ export default async function OrdersPage() {
                 <tr className="bg-brand-gray/30 border-b border-brand-border backdrop-blur-sm">
                   <th className="px-6 py-5 text-xs uppercase tracking-[0.15em] font-bold text-brand-gold">Order Date</th>
                   <th className="px-6 py-5 text-xs uppercase tracking-[0.15em] font-bold text-brand-gold">Customer</th>
-                  <th className="px-6 py-5 text-xs uppercase tracking-[0.15em] font-bold text-brand-gold">Delivery Logistics</th>
+                  <th className="px-6 py-5 text-xs uppercase tracking-[0.15em] font-bold text-brand-gold">Order Details & Logistics</th>
                   <th className="px-6 py-5 text-xs uppercase tracking-[0.15em] font-bold text-brand-gold">Financials</th>
                   <th className="px-6 py-5 text-xs uppercase tracking-[0.15em] font-bold text-brand-gold text-right">Status & Actions</th>
                 </tr>
@@ -93,14 +95,36 @@ export default async function OrdersPage() {
                         </div>
                       </td>
 
-                      {/* 3. Logistics / Address */}
-                      <td className="px-6 py-4">
-                        <div className="flex items-start text-xs text-gray-400 max-w-[250px] leading-relaxed">
+                      {/* 3. Logistics / Address / Items */}
+                      <td className="px-6 py-4 min-w-[250px]">
+                        <div className="flex items-start text-xs text-gray-400 max-w-[250px] leading-relaxed mb-2">
                           <MapPin className="w-3.5 h-3.5 mr-1.5 shrink-0 mt-0.5 opacity-70" />
                           <span className="truncate whitespace-normal line-clamp-2">{order.delivery_address}</span>
                         </div>
-                        <div className="text-[10px] uppercase tracking-widest text-brand-gold/60 mt-1 ml-5 font-bold">
-                          {order.order_items?.length || 0} Items
+                        
+                        <div className="flex items-center gap-3 ml-5">
+                          <div className="text-[10px] uppercase tracking-widest text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded font-bold border border-brand-gold/20">
+                            {order.order_items?.length || 0} Items
+                          </div>
+                          
+                          {order.order_items && order.order_items.length > 0 && (
+                            <div className="flex -space-x-2 overflow-hidden">
+                              {order.order_items.slice(0, 3).map((item, i) => (
+                                <div key={item.id} className="inline-block h-6 w-6 rounded-full ring-2 ring-brand-dark bg-brand-gray overflow-hidden relative">
+                                  {item.products?.image_url ? (
+                                    <Image src={item.products.image_url} alt="Item" fill className="object-cover" unoptimized />
+                                  ) : (
+                                    <BoxSelect className="w-3 h-3 m-1.5 text-gray-500" />
+                                  )}
+                                </div>
+                              ))}
+                              {order.order_items.length > 3 && (
+                                <div className="inline-block h-6 w-6 rounded-full ring-2 ring-brand-dark bg-brand-gray flex items-center justify-center text-[8px] font-bold text-white z-10">
+                                  +{order.order_items.length - 3}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </td>
 
@@ -131,17 +155,27 @@ export default async function OrdersPage() {
                           {/* Client Component Dropdown for Fulfillment Status */}
                           <StatusDropdown orderId={order.id} currentStatus={order.status} />
 
-                          {/* Delete Form (Invokes Server Action Native without JavaScript required) */}
-                          <form action={deleteAction as any} className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <button 
-                              type="submit" 
-                              className="p-1.5 bg-red-950/10 rounded-md text-red-500/70 hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-900/50 transition-all"
-                              title="Delete Order"
+                          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
+                            {/* View Details Link */}
+                            <Link
+                              href={`/admin/orders/${order.id}`}
+                              className="p-1.5 bg-brand-gold/10 rounded-md text-brand-gold hover:bg-brand-gold/20 border border-transparent hover:border-brand-gold/30 transition-all flex items-center justify-center"
+                              title="View Order Details"
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </form>
+                              <Eye className="h-4 w-4" />
+                            </Link>
 
+                            {/* Delete Form */}
+                            <form action={deleteAction as any}>
+                              <button 
+                                type="submit" 
+                                className="p-1.5 bg-red-950/10 rounded-md text-red-500/70 hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-900/50 transition-all flex items-center justify-center"
+                                title="Delete Order"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </form>
+                          </div>
                         </div>
                       </td>
 

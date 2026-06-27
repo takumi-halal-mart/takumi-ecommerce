@@ -33,7 +33,9 @@ export function CouponManager({ initialCoupons }: { initialCoupons: Coupon[] }) 
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Never'
-    return new Date(dateStr).toLocaleDateString()
+    // Extract YYYY-MM-DD directly to prevent local timezone shifts from changing the day
+    const [year, month, day] = dateStr.split('T')[0].split('-')
+    return `${month}/${day}/${year}` // Formats reliably to MM/DD/YYYY
   }
 
   return (
