@@ -155,7 +155,7 @@ export default async function OrdersPage() {
                           {/* Client Component Dropdown for Fulfillment Status */}
                           <StatusDropdown orderId={order.id} currentStatus={order.status} />
 
-                          <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 gap-2">
+                          <div className="flex items-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 gap-2 mt-4 lg:mt-0">
                             {/* View Details Link */}
                             <Link
                               href={`/admin/orders/${order.id}`}

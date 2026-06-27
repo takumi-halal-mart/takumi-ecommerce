@@ -155,7 +155,7 @@ export default async function ProductsPage() {
 
                       {/* 5. Actions (Hover to reveal) */}
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="flex items-center justify-end space-x-3 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
                           
                           {/* Edit Button */}
                           <Link 
