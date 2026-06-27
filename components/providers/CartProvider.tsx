@@ -9,6 +9,7 @@ export interface CartItem {
     retail_price: number | null
     image_url: string | null
     unit_type?: string | null
+    wholesale_moq?: number | null
   }
   quantity: number
 }

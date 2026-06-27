@@ -1,13 +1,23 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, Menu, X } from 'lucide-react'
 import { useCart } from '@/components/providers/CartProvider'
 
 export function MarketplaceNavbar() {
   const pathname = usePathname()
   const { cartCount } = useCart()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const navLinks = [
+    { name: 'Home', href: '/' },
+    { name: 'Store', href: '/shop' },
+    { name: 'Categories', href: '/categories' },
+    { name: 'Wholesale', href: '/wholesale' }
+  ]
 
   return (
     <>
@@ -19,25 +29,19 @@ export function MarketplaceNavbar() {
             
             {/* Left: Brand Logo */}
             <div className="flex-shrink-0">
-              <Link href="/" className="text-2xl font-black text-black tracking-widest uppercase hover:opacity-80 transition-opacity">
-                TAKUMI
+              <Link href="/" className="flex items-center gap-2 sm:gap-3 text-2xl font-black text-black tracking-widest uppercase hover:opacity-80 transition-opacity">
+                <Image src="/takumi.webp" alt="Takumi Logo" width={40} height={40} className="object-contain" />
+                <span className="hidden sm:block">TAKUMI</span>
               </Link>
             </div>
 
             {/* Center: Navigation Links (Hidden on Mobile) */}
             <div className="hidden md:flex flex-1 justify-center space-x-12">
-              {[
-                { name: 'Home', href: '/' },
-                { name: 'Store', href: '/shop' },
-                { name: 'Categories', href: '/#categories' },
-                { name: 'Wholesale', href: '/wholesale' }
-              ].map((link) => {
+              {navLinks.map((link) => {
                 // Determine if link is active (exact match for Home/hash links, or prefix match for others)
-                const isActive = link.href.includes('#') 
-                  ? false 
-                  : link.href === '/' 
-                    ? pathname === '/' 
-                    : pathname.startsWith(link.href)
+                const isActive = link.href === '/' 
+                  ? pathname === '/' 
+                  : pathname.startsWith(link.href)
 
                 return (
                   <Link 
@@ -53,10 +57,7 @@ export function MarketplaceNavbar() {
             </div>
 
             {/* Right: Icons */}
-            <div className="flex items-center space-x-6 text-gray-600 flex-shrink-0">
-
-
-
+            <div className="flex items-center space-x-4 md:space-x-6 text-gray-600 flex-shrink-0">
               
               <Link href="/cart" className="relative hover:text-black transition-colors p-1 group" aria-label="Shopping Cart">
                 <ShoppingCart className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -67,10 +68,43 @@ export function MarketplaceNavbar() {
                   </span>
                 )}
               </Link>
+
+              {/* Mobile Menu Toggle */}
+              <button 
+                className="md:hidden p-1 hover:text-black transition-colors"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle Mobile Menu"
+              >
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
             
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute w-full left-0 top-full bg-white border-b border-gray-100 shadow-lg z-40">
+            <div className="px-4 py-4 space-y-4 flex flex-col">
+              {navLinks.map((link) => {
+                const isActive = link.href === '/' 
+                  ? pathname === '/' 
+                  : pathname.startsWith(link.href)
+
+                return (
+                  <Link 
+                    key={link.name} 
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`block text-base font-bold uppercase tracking-widest py-2 ${isActive ? 'text-[#D4AF37]' : 'text-gray-900 hover:text-[#D4AF37]'}`}
+                  >
+                    {link.name}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </nav>
     </>
   )

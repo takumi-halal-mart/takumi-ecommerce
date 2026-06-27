@@ -9,6 +9,103 @@ import { useCart } from '@/components/providers/CartProvider'
 import { getStoreSettings, StoreSettings, validateCouponCode } from '@/app/actions/storefront'
 import { placeOrder } from '@/app/actions/orders'
 
+function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
+  const [localQty, setLocalQty] = useState<string | number>(item.quantity)
+
+  React.useEffect(() => {
+    setLocalQty(item.quantity)
+  }, [item.quantity])
+
+  const handleBlur = () => {
+    const val = typeof localQty === 'string' ? parseInt(localQty) : localQty;
+    const min = item.product.wholesale_moq || 1;
+    if (isNaN(val) || val === 0) {
+      removeFromCart(item.product.id);
+    } else if (val < min) {
+      updateQuantity(item.product.id, min);
+      setLocalQty(min);
+    } else {
+      updateQuantity(item.product.id, val);
+    }
+  }
+
+  const numericQty = typeof localQty === 'number' ? localQty : 0;
+
+  return (
+    <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 items-center">
+      <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+        {item.product.image_url ? (
+          <Image src={item.product.image_url} alt={item.product.name} fill className="object-cover" unoptimized />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <ShoppingBag className="w-8 h-8 text-gray-300" />
+          </div>
+        )}
+      </div>
+      
+      <div className="flex-grow text-center sm:text-left w-full">
+        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">{item.product.name}</h3>
+        <div className="text-sm text-gray-500 font-medium mb-3">
+          ¥{item.product.retail_price?.toLocaleString()} / {item.product.unit_type || 'piece'}
+        </div>
+        
+        <div className="flex items-center justify-center sm:justify-start gap-4">
+          <div className="flex items-center bg-gray-50 rounded-full border border-gray-200">
+            <button 
+              onClick={() => {
+                const newVal = Math.max(item.product.wholesale_moq || 1, numericQty - 1);
+                setLocalQty(newVal);
+                updateQuantity(item.product.id, newVal);
+              }}
+              disabled={numericQty <= (item.product.wholesale_moq || 1)}
+              className={`w-8 h-8 flex items-center justify-center rounded-l-full transition-colors ${numericQty <= (item.product.wholesale_moq || 1) ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-black'}`}
+              aria-label="Decrease quantity"
+            >
+              <Minus className="w-3 h-3" />
+            </button>
+            <input 
+              type="number"
+              value={localQty}
+              onChange={(e) => {
+                if (e.target.value === '') {
+                  setLocalQty('');
+                } else {
+                  setLocalQty(parseInt(e.target.value));
+                }
+              }}
+              onBlur={handleBlur}
+              className="w-12 text-center text-sm font-bold text-black bg-transparent outline-none m-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+            <button 
+              onClick={() => {
+                const newVal = numericQty + 1;
+                setLocalQty(newVal);
+                updateQuantity(item.product.id, newVal);
+              }}
+              className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black transition-colors rounded-r-full"
+              aria-label="Increase quantity"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
+          
+          <button 
+            onClick={() => removeFromCart(item.product.id)}
+            className="text-gray-400 hover:text-red-500 transition-colors p-2"
+            aria-label="Remove item"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      
+      <div className="sm:text-right font-black text-xl text-black">
+        ¥{((item.product.retail_price || 0) * item.quantity).toLocaleString()}
+      </div>
+    </div>
+  )
+}
+
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, clearCart, cartCount } = useCart()
   const router = useRouter()
@@ -222,57 +319,12 @@ export default function CartPage() {
             {/* Cart Items List */}
             <div className="lg:col-span-7 space-y-4">
               {items.map((item) => (
-                <div key={item.product.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 items-center">
-                  <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
-                    {item.product.image_url ? (
-                      <Image src={item.product.image_url} alt={item.product.name} fill className="object-cover" unoptimized />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <ShoppingBag className="w-8 h-8 text-gray-300" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-grow text-center sm:text-left w-full">
-                    <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">{item.product.name}</h3>
-                    <div className="text-sm text-gray-500 font-medium mb-3">
-                      ¥{item.product.retail_price?.toLocaleString()} / {item.product.unit_type || 'piece'}
-                    </div>
-                    
-                    <div className="flex items-center justify-center sm:justify-start gap-4">
-                      {/* Quantity Selector */}
-                      <div className="flex items-center bg-gray-50 rounded-full border border-gray-200">
-                        <button 
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black transition-colors rounded-l-full"
-                          aria-label="Decrease quantity"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="w-8 text-center text-sm font-bold text-black">{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black transition-colors rounded-r-full"
-                          aria-label="Increase quantity"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                      </div>
-                      
-                      <button 
-                        onClick={() => removeFromCart(item.product.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-2"
-                        aria-label="Remove item"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="sm:text-right font-black text-xl text-black">
-                    ¥{((item.product.retail_price || 0) * item.quantity).toLocaleString()}
-                  </div>
-                </div>
+                <CartItemRow 
+                  key={item.product.id} 
+                  item={item} 
+                  updateQuantity={updateQuantity} 
+                  removeFromCart={removeFromCart} 
+                />
               ))}
             </div>
 

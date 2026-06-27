@@ -211,7 +211,7 @@ export function EditProductForm({ product }: { product: Product }) {
                   <div>
                     <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Retail Price (¥)</label>
                     <input
-                      name="retail_price" type="number" step="1" required defaultValue={product.retail_price}
+                      name="retail_price" type="number" step="1" required defaultValue={product.retail_price ?? ''}
                       className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all font-mono"
                     />
                   </div>

@@ -248,3 +248,5 @@ ALTER TABLE coupon_usages ENABLE ROW LEVEL SECURITY;
 GRANT SELECT, INSERT ON coupon_usages TO authenticated, anon;
 
 ALTER TABLE coupons ADD COLUMN limit_per_customer BOOLEAN DEFAULT true NOT NULL;
+
+ALTER VIEW public.customer_crm SET (security_invoker = on);

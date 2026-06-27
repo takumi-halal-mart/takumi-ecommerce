@@ -236,6 +236,48 @@ export async function getRelatedProducts(category: string, excludeId: string) {
   }
 }
 
+export async function getAllRetailProducts() {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_retail', true)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase error fetching all retail products:', error)
+      return { success: false, data: null, error: 'Failed to fetch products.' }
+    }
+
+    return { success: true, data: data as StorefrontProduct[], error: null }
+  } catch (error: any) {
+    console.error('Exception fetching all retail products:', error)
+    return { success: false, data: null, error: 'An unexpected error occurred.' }
+  }
+}
+
+export async function getWholesaleProducts() {
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_wholesale', true)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Supabase error fetching wholesale products:', error)
+      return { success: false, data: null, error: 'Failed to fetch wholesale products.' }
+    }
+
+    return { success: true, data: data as StorefrontProduct[], error: null }
+  } catch (error: any) {
+    console.error('Exception fetching wholesale products:', error)
+    return { success: false, data: null, error: 'An unexpected error occurred.' }
+  }
+}
+
 export async function validateCouponCode(code: string, subtotal: number) {
   try {
     const supabase = await createClient()
