@@ -167,6 +167,7 @@ export interface StoreSettings {
   delivery_fee: number
   free_shipping_threshold: number
   is_store_open: boolean
+  store_closed_message: string | null
   whatsapp_number: string
 }
 
@@ -254,6 +255,50 @@ export async function getAllRetailProducts() {
   } catch (error: any) {
     console.error('Exception fetching all retail products:', error)
     return { success: false, data: null, error: 'An unexpected error occurred.' }
+  }
+}
+
+export async function getPaginatedRetailProducts(
+  page: number = 1,
+  limit: number = 12,
+  category: string = 'All',
+  searchQuery: string = '',
+  isWholesaleOnly: boolean = false,
+  sortMethod: string = 'newest'
+) {
+  try {
+    const supabase = await createClient()
+    let query = supabase.from('products').select('*', { count: 'exact' }).eq('is_retail', true)
+
+    if (category !== 'All') {
+      query = query.eq('category', category)
+    }
+    if (isWholesaleOnly) {
+      query = query.eq('is_wholesale', true)
+    }
+    if (searchQuery.trim() !== '') {
+      query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+    }
+
+    if (sortMethod === 'price_low') query = query.order('retail_price', { ascending: true })
+    else if (sortMethod === 'price_high') query = query.order('retail_price', { ascending: false })
+    else query = query.order('created_at', { ascending: false })
+
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+    query = query.range(from, to)
+
+    const { data, error, count } = await query
+
+    if (error) {
+      console.error('Supabase error fetching paginated products:', error)
+      return { success: false, data: null, count: 0, error: 'Failed to fetch products.' }
+    }
+
+    return { success: true, data: data as StorefrontProduct[], count: count || 0, error: null }
+  } catch (error: any) {
+    console.error('Exception fetching paginated products:', error)
+    return { success: false, data: null, count: 0, error: 'An unexpected error occurred.' }
   }
 }
 

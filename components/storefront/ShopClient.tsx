@@ -1,55 +1,72 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { StorefrontProduct, StorefrontCategory } from '@/app/actions/storefront'
+import { useState, useEffect } from 'react'
+import { StorefrontProduct, StorefrontCategory, getPaginatedRetailProducts } from '@/app/actions/storefront'
 import { MarketplaceCard } from './MarketplaceCard'
-import { Filter, Check, Search } from 'lucide-react'
+import { Filter, Check, Search, Loader2 } from 'lucide-react'
 
 export interface ShopClientProps {
   initialProducts: StorefrontProduct[]
+  initialTotalCount: number
   categories: StorefrontCategory[]
   initialCategory: string
 }
 
-export function ShopClient({ initialProducts, categories, initialCategory }: ShopClientProps) {
+export function ShopClient({ initialProducts, initialTotalCount, categories, initialCategory }: ShopClientProps) {
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [sortMethod, setSortMethod] = useState('newest')
   const [isWholesaleOnly, setIsWholesaleOnly] = useState(false)
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
-  const [visibleCount, setVisibleCount] = useState(12)
   const [searchQuery, setSearchQuery] = useState('')
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  
+  // Pagination State
+  const [products, setProducts] = useState(initialProducts)
+  const [totalCount, setTotalCount] = useState(initialTotalCount)
+  const [page, setPage] = useState(1)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [isFetching, setIsFetching] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
-  // Filtering Logic
-  const filteredProducts = useMemo(() => {
-    let result = initialProducts
-
-    if (searchQuery.trim() !== '') {
-      const q = searchQuery.toLowerCase()
-      result = result.filter(p => p.name.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q))
+  // Trigger refetch on filter change
+  useEffect(() => {
+    if (!isMounted) {
+      setIsMounted(true)
+      return
     }
 
-    if (activeCategory !== 'All') {
-      result = result.filter(p => p.category === activeCategory)
+    const timer = setTimeout(() => {
+      fetchProducts(1, true)
+    }, 300) // debounce
+    
+    return () => clearTimeout(timer)
+  }, [activeCategory, sortMethod, isWholesaleOnly, searchQuery])
+
+  const fetchProducts = async (pageToFetch: number, reset: boolean = false) => {
+    if (reset) setIsFetching(true)
+    else setIsLoadingMore(true)
+
+    const res = await getPaginatedRetailProducts(pageToFetch, 12, activeCategory, searchQuery, isWholesaleOnly, sortMethod)
+    
+    if (res.success && res.data) {
+      if (reset) {
+        setProducts(res.data)
+        setPage(1)
+      } else {
+        setProducts(prev => [...prev, ...res.data])
+        setPage(pageToFetch)
+      }
+      setTotalCount(res.count)
     }
 
-    if (isWholesaleOnly) {
-      result = result.filter(p => p.is_wholesale)
-    }
+    setIsFetching(false)
+    setIsLoadingMore(false)
+  }
 
-    // Sorting
-    result.sort((a, b) => {
-      if (sortMethod === 'price_low') return (a.retail_price || 0) - (b.retail_price || 0)
-      if (sortMethod === 'price_high') return (b.retail_price || 0) - (a.retail_price || 0)
-      // default: newest
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })
+  const handleLoadMore = () => {
+    fetchProducts(page + 1)
+  }
 
-    return result
-  }, [initialProducts, activeCategory, sortMethod, isWholesaleOnly, searchQuery])
-
-  const visibleProducts = filteredProducts.slice(0, visibleCount)
-  const hasMore = visibleCount < filteredProducts.length
-
+  const hasMore = products.length < totalCount
   const allCategories = [{ id: 'all', name: 'All', created_at: '' }, ...categories]
 
   return (
@@ -66,7 +83,7 @@ export function ShopClient({ initialProducts, categories, initialCategory }: Sho
             {allCategories.map(cat => (
               <button
                 key={cat.name}
-                onClick={() => { setActiveCategory(cat.name); setVisibleCount(12); }}
+                onClick={() => setActiveCategory(cat.name)}
                 className={`flex-shrink-0 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all border ${
                   activeCategory === cat.name 
                     ? 'bg-brand-gold text-black border-brand-gold' 
@@ -117,7 +134,7 @@ export function ShopClient({ initialProducts, categories, initialCategory }: Sho
                         type="text" 
                         placeholder="Search products..." 
                         value={searchQuery}
-                        onChange={(e) => { setSearchQuery(e.target.value); setVisibleCount(12); }}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-gold focus:border-brand-gold text-sm text-black"
                       />
                     </div>
@@ -137,7 +154,7 @@ export function ShopClient({ initialProducts, categories, initialCategory }: Sho
                             name="category" 
                             className="hidden" 
                             checked={activeCategory === cat.name}
-                            onChange={() => { setActiveCategory(cat.name); setVisibleCount(12); }} 
+                            onChange={() => setActiveCategory(cat.name)} 
                           />
                           <span className={`text-sm font-medium ${activeCategory === cat.name ? 'text-black font-bold' : 'text-gray-600 group-hover:text-black'}`}>
                             {cat.name}
@@ -153,7 +170,7 @@ export function ShopClient({ initialProducts, categories, initialCategory }: Sho
                      <label className="flex items-center justify-between cursor-pointer">
                         <span className="text-sm font-medium text-gray-700">Wholesale Available</span>
                         <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="toggle" id="toggle" checked={isWholesaleOnly} onChange={(e) => {setIsWholesaleOnly(e.target.checked); setVisibleCount(12);}} className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-brand-gold checked:bg-brand-gold transition-all duration-300" style={{ right: isWholesaleOnly ? '0' : '20px' }}/>
+                            <input type="checkbox" name="toggle" id="toggle" checked={isWholesaleOnly} onChange={(e) => setIsWholesaleOnly(e.target.checked)} className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300 checked:right-0 checked:border-brand-gold checked:bg-brand-gold transition-all duration-300" style={{ right: isWholesaleOnly ? '0' : '20px' }}/>
                             <label htmlFor="toggle" className={`toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer ${isWholesaleOnly ? 'bg-brand-gold/30' : ''}`}></label>
                         </div>
                      </label>
@@ -183,7 +200,7 @@ export function ShopClient({ initialProducts, categories, initialCategory }: Sho
             
             {/* Desktop Sorting Header */}
             <div className="hidden md:flex justify-between items-center mb-6">
-              <span className="text-sm text-gray-500 font-medium">Showing {filteredProducts.length} results</span>
+              <span className="text-sm text-gray-500 font-medium">Showing {products.length} of {totalCount} results</span>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold uppercase tracking-widest text-gray-400">Sort:</span>
                 <select 
@@ -199,10 +216,15 @@ export function ShopClient({ initialProducts, categories, initialCategory }: Sho
             </div>
 
             {/* Grid */}
-            {visibleProducts.length > 0 ? (
+            {isFetching ? (
+               <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+                 <Loader2 className="w-10 h-10 animate-spin mb-4 text-brand-gold" />
+                 <p className="font-bold uppercase tracking-widest text-sm">Searching Catalog...</p>
+               </div>
+            ) : products.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                  {visibleProducts.map(product => (
+                  {products.map(product => (
                     <MarketplaceCard key={product.id} product={product} />
                   ))}
                 </div>
@@ -211,10 +233,11 @@ export function ShopClient({ initialProducts, categories, initialCategory }: Sho
                 {hasMore && (
                   <div className="mt-12 text-center">
                     <button 
-                      onClick={() => setVisibleCount(prev => prev + 12)}
-                      className="inline-flex items-center justify-center px-8 py-3 border-2 border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-black font-bold uppercase tracking-widest text-sm rounded-full transition-colors"
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="inline-flex items-center justify-center px-8 py-3 border-2 border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-black font-bold uppercase tracking-widest text-sm rounded-full transition-colors disabled:opacity-50"
                     >
-                      Load More Products
+                      {isLoadingMore ? 'Loading...' : 'Load More Products'}
                     </button>
                   </div>
                 )}

@@ -115,6 +115,7 @@ export default function CartPage() {
   const [success, setSuccess] = useState(false)
   const [settings, setSettings] = useState<StoreSettings | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'WhatsApp' | 'Stripe'>('WhatsApp')
+  const [isCheckoutVisible, setIsCheckoutVisible] = useState(false)
 
   // Coupon State
   const [couponCode, setCouponCode] = useState('')
@@ -136,6 +137,23 @@ export default function CartPage() {
     }
     fetchSettings()
   }, [])
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsCheckoutVisible(entry.isIntersecting)
+      },
+      { threshold: 0.1 }
+    )
+    
+    // Give DOM a tick to render
+    setTimeout(() => {
+      const el = document.getElementById('checkout-section')
+      if (el) observer.observe(el)
+    }, 100)
+    
+    return () => observer.disconnect()
+  }, [items.length])
 
   const subtotal = items.reduce((total, item) => {
     return total + ((item.product.retail_price || 0) * item.quantity)
@@ -329,7 +347,7 @@ export default function CartPage() {
             </div>
 
             {/* Checkout Sidebar */}
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-5" id="checkout-section">
               <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-gray-100 sticky top-32">
                 <h2 className="text-xl font-black text-black uppercase tracking-widest border-b border-gray-100 pb-4 mb-6">
                   Order Summary
@@ -486,10 +504,16 @@ export default function CartPage() {
 
                   <button 
                     type="submit" 
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (settings ? !settings.is_store_open : false)}
                     className="w-full bg-[#D4AF37] text-black py-4 rounded-full font-black uppercase tracking-widest hover:bg-yellow-500 transition-all hover:scale-[1.02] shadow-lg shadow-[#D4AF37]/20 flex items-center justify-center gap-2 mt-6 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
-                    {isSubmitting ? 'Processing...' : paymentMethod === 'WhatsApp' ? 'Place Order via WhatsApp' : 'Pay Securely with Stripe'}
+                    {isSubmitting 
+                      ? 'Processing...' 
+                      : (settings && !settings.is_store_open) 
+                        ? 'Store Currently Closed' 
+                        : paymentMethod === 'WhatsApp' 
+                          ? 'Place Order via WhatsApp' 
+                          : 'Pay Securely with Stripe'}
                   </button>
                 </form>
               </div>
@@ -497,6 +521,24 @@ export default function CartPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile Sticky Checkout Action */}
+      {items.length > 0 && !success && !isCheckoutVisible && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40 flex items-center justify-between animate-in slide-in-from-bottom-full duration-300">
+          <div>
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">Total</div>
+            <div className="text-xl font-black text-black leading-none">¥{finalTotal.toLocaleString()}</div>
+          </div>
+          <button 
+            onClick={() => {
+              document.getElementById('checkout-section')?.scrollIntoView({ behavior: 'smooth' })
+            }}
+            className="bg-[#D4AF37] text-black px-8 py-3 rounded-full font-black uppercase tracking-widest hover:bg-yellow-500 shadow-lg shadow-[#D4AF37]/20 transition-all hover:scale-[1.02]"
+          >
+            Checkout
+          </button>
+        </div>
+      )}
     </div>
   )
 }

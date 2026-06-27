@@ -1,4 +1,4 @@
-import { getStoreCategories, getAllRetailProducts } from '@/app/actions/storefront'
+import { getStoreCategories, getPaginatedRetailProducts } from '@/app/actions/storefront'
 import { ShopClient } from '@/components/storefront/ShopClient'
 
 export const metadata = {
@@ -14,16 +14,18 @@ export default async function ShopPage(props: {
 
   const [categoriesRes, productsRes] = await Promise.all([
     getStoreCategories(),
-    getAllRetailProducts()
+    getPaginatedRetailProducts(1, 12, initialCategory)
   ])
 
   const categories = categoriesRes.data || []
-  const products = productsRes.data || []
+  const initialProducts = productsRes.data || []
+  const initialTotalCount = productsRes.count || 0
 
   return (
     <div className="bg-[#F8F9FA] min-h-screen">
       <ShopClient 
-        initialProducts={products} 
+        initialProducts={initialProducts} 
+        initialTotalCount={initialTotalCount}
         categories={categories} 
         initialCategory={initialCategory} 
       />
