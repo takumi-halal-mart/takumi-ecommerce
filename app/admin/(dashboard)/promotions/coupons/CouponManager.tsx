@@ -1,14 +1,21 @@
 'use client'
 
-import { useActionState, useTransition } from 'react'
+import { useActionState, useTransition, useState } from 'react'
 import { Coupon, createCoupon, toggleCouponStatus, deleteCoupon } from './actions'
-import { Loader2, Tag, Trash2, Activity, TicketPercent, AlertTriangle } from 'lucide-react'
+import { Loader2, Tag, Trash2, Activity, TicketPercent, AlertTriangle, Copy, Check } from 'lucide-react'
 
 export function CouponManager({ initialCoupons }: { initialCoupons: Coupon[] }) {
   const [state, formAction, isServerPending] = useActionState(createCoupon, { error: '', success: false })
   const [isPending, startTransition] = useTransition()
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const isSubmitting = isPending || isServerPending
+
+  const handleCopy = (code: string, id: string) => {
+    navigator.clipboard.writeText(code)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
 
   const handleToggle = (id: string, currentStatus: boolean) => {
     startTransition(() => {
@@ -87,7 +94,7 @@ export function CouponManager({ initialCoupons }: { initialCoupons: Coupon[] }) 
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-brand-border/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-6 border-t border-brand-border/50">
               <div className="space-y-2">
                 <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold">Min Spend (¥)</label>
                 <input 
@@ -108,6 +115,22 @@ export function CouponManager({ initialCoupons }: { initialCoupons: Coupon[] }) 
                   className="w-full px-4 py-3 bg-brand-gray/50 text-white border border-brand-border rounded-xl outline-none focus:ring-1 focus:ring-brand-gold font-mono transition-all placeholder-gray-600" 
                   placeholder="Unlimited" 
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold">Limit 1 use per customer</label>
+                <div className="pt-2">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      name="limit_per_customer" 
+                      className="sr-only peer"
+                      defaultChecked
+                    />
+                    <div className="w-11 h-6 bg-brand-gray border border-brand-border rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-gray-400 after:border-gray-400 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-gold peer-checked:border-brand-gold peer-checked:after:bg-black shadow-inner"></div>
+                  </label>
+                </div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider leading-tight">Enforces a strict one-time use policy per phone number during checkout.</p>
               </div>
               
               <div className="space-y-2">
@@ -176,14 +199,32 @@ export function CouponManager({ initialCoupons }: { initialCoupons: Coupon[] }) 
                     className={`hover:bg-brand-gray/20 transition-colors ${isDepleted ? 'opacity-60 bg-red-950/5' : ''}`}
                   >
                     <td className="px-6 py-5 whitespace-nowrap">
-                      <span className={`font-mono font-bold tracking-widest px-3 py-1 rounded bg-brand-gray/80 border border-brand-border shadow-inner ${isDepleted ? 'text-gray-500' : 'text-white'}`}>
-                        {coupon.code}
-                      </span>
-                      {isDepleted && (
-                        <span className="ml-3 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest bg-red-950/80 text-red-400 rounded border border-red-900/50">
-                          Depleted
+                      <div className="flex items-center">
+                        <span className={`font-mono font-bold tracking-widest px-3 py-1 rounded bg-brand-gray/80 border border-brand-border shadow-inner ${isDepleted ? 'text-gray-500' : 'text-white'}`}>
+                          {coupon.code}
                         </span>
-                      )}
+                        <button 
+                          onClick={() => handleCopy(coupon.code, coupon.id)}
+                          className="ml-2 p-1.5 text-gray-500 hover:text-brand-gold hover:bg-brand-gold/10 rounded-md transition-all"
+                          title="Copy to clipboard"
+                        >
+                          {copiedId === coupon.id ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                        </button>
+                        {coupon.limit_per_customer ? (
+                          <span className="ml-3 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-brand-gold/10 text-brand-gold rounded border border-brand-gold/20">
+                            1x Per User
+                          </span>
+                        ) : (
+                          <span className="ml-3 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest bg-brand-gray/50 text-gray-400 rounded border border-brand-border">
+                            Multi-use
+                          </span>
+                        )}
+                        {isDepleted && (
+                          <span className="ml-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest bg-red-950/80 text-red-400 rounded border border-red-900/50">
+                            Depleted
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap font-medium text-white">
                       {coupon.discount_type === 'percentage' 

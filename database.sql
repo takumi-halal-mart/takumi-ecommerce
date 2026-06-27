@@ -232,3 +232,19 @@ ON coupons FOR SELECT USING (true);
 -- Only admins can create, update, or delete the coupons
 CREATE POLICY "Admins have full control over coupons" 
 ON coupons FOR ALL USING (auth.role() = 'authenticated');
+
+CREATE TABLE coupon_usages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  coupon_id UUID REFERENCES coupons(id) ON DELETE CASCADE,
+  customer_phone TEXT NOT NULL,
+  used_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  
+  -- This guarantees a phone number can only map to a specific coupon once
+  CONSTRAINT unique_coupon_per_phone UNIQUE (coupon_id, customer_phone)
+);
+
+-- Enable RLS
+ALTER TABLE coupon_usages ENABLE ROW LEVEL SECURITY;
+GRANT SELECT, INSERT ON coupon_usages TO authenticated, anon;
+
+ALTER TABLE coupons ADD COLUMN limit_per_customer BOOLEAN DEFAULT true NOT NULL;

@@ -14,6 +14,7 @@ export interface Coupon {
   usage_limit: number | null
   times_used: number
   is_active: boolean
+  limit_per_customer: boolean
 }
 
 /**
@@ -74,13 +75,16 @@ export async function createCoupon(prevState: any, formData: FormData) {
       ? parseInt(usage_limitRaw, 10) 
       : null
 
+    const limit_per_customer = formData.get('limit_per_customer') === 'on' || formData.get('limit_per_customer') === 'true'
+
     const payload = {
       code,
       discount_type,
       discount_value,
       expiration_date,
       min_spend,
-      usage_limit
+      usage_limit,
+      limit_per_customer
     }
 
     // 4. Insert into the database

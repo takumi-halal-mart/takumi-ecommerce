@@ -31,12 +31,12 @@ export function Sidebar({ userEmail }: SidebarProps) {
       <header className="h-16 shrink-0 bg-brand-dark border-b border-brand-border flex items-center justify-between px-4 md:hidden shadow-md relative z-20">
         <div className="flex items-center">
           <div className="relative w-10 h-10 mr-2 shrink-0">
-            <Image src="/takumi.webp" alt="Takumi Logo" fill className="object-contain drop-shadow-md" />
+            <Image src="/takumi_white.png" alt="Takumi Logo" fill className="object-contain drop-shadow-md" />
           </div>
           <span className="text-lg font-bold tracking-[0.2em] text-white uppercase mt-1">Takumi</span>
         </div>
-        <button 
-          onClick={() => setIsOpen(!isOpen)} 
+        <button
+          onClick={() => setIsOpen(!isOpen)}
           className="p-2 text-gray-400 hover:text-brand-gold rounded-lg hover:bg-brand-gray transition-colors"
         >
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -45,7 +45,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
 
       {/* Mobile Drawer Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"
           onClick={() => setIsOpen(false)}
         />
@@ -69,7 +69,7 @@ export function Sidebar({ userEmail }: SidebarProps) {
         {/* Desktop Logo Header */}
         <div className="h-20 items-center px-6 border-b border-brand-border shrink-0 hidden md:flex">
           <div className="relative w-12 h-12 mr-3 shrink-0">
-            <Image src="/takumi.webp" alt="Takumi Logo" fill className="object-contain drop-shadow-md" />
+            <Image src="/takumi_white.png" alt="Takumi Logo" fill className="object-contain drop-shadow-md" />
           </div>
           <span className="text-xl font-bold tracking-[0.2em] text-white uppercase mt-1">Takumi</span>
         </div>
@@ -77,17 +77,16 @@ export function Sidebar({ userEmail }: SidebarProps) {
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
-            
+
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsOpen(false)} // Close mobile menu on click
-                className={`flex items-center px-4 py-3 rounded-lg font-medium transition-all ${
-                  isActive
-                    ? 'bg-brand-gold/10 text-brand-gold border border-brand-gold/20 shadow-[0_0_15px_rgba(212,175,55,0.05)]'
-                    : 'text-gray-400 hover:bg-brand-gray hover:text-white border border-transparent'
-                }`}
+                className={`flex items-center px-4 py-3 rounded-lg font-medium transition-all ${isActive
+                  ? 'bg-brand-gold/10 text-brand-gold border border-brand-gold/20 shadow-[0_0_15px_rgba(212,175,55,0.05)]'
+                  : 'text-gray-400 hover:bg-brand-gray hover:text-white border border-transparent'
+                  }`}
               >
                 <item.icon className="h-5 w-5 mr-3" />
                 {item.name}
