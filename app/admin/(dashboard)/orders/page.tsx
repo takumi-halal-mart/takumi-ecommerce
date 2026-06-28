@@ -20,6 +20,15 @@ export default async function OrdersPage() {
           <h1 className="text-3xl font-semibold tracking-tight text-white">Fulfillment & Orders</h1>
           <p className="text-sm text-gray-400 mt-2">Manage incoming purchases and update shipping logistics.</p>
         </div>
+        <div>
+          <Link 
+            href="/admin/orders/inquiries" 
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-gold text-black font-black uppercase tracking-widest text-sm rounded-xl hover:bg-yellow-500 transition-colors shadow-lg shadow-brand-gold/20"
+          >
+            <BoxSelect className="w-4 h-4" />
+            Wholesale Inquiries
+          </Link>
+        </div>
       </div>
 
       {/* Database Error Handling */}

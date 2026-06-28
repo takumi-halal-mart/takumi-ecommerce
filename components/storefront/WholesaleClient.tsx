@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { StorefrontProduct } from '@/app/actions/storefront'
+import { StorefrontProduct, submitWholesaleInquiry } from '@/app/actions/storefront'
 import { WholesaleCard } from './WholesaleCard'
 import { Search, Building2, Truck, Snowflake } from 'lucide-react'
 
@@ -12,6 +12,7 @@ export interface WholesaleClientProps {
 export function WholesaleClient({ products }: WholesaleClientProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isFormSubmitted, setIsFormSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const filteredProducts = products.filter(p => {
     if (searchQuery.trim() === '') return true
@@ -102,46 +103,74 @@ export function WholesaleClient({ products }: WholesaleClientProps) {
               </div>
             ) : (
               <form 
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  setIsFormSubmitted(true)
-                }} 
+                action={async (formData) => {
+                  setIsSubmitting(true)
+                  const res = await submitWholesaleInquiry(formData)
+                  if (res.success) {
+                    setIsFormSubmitted(true)
+                  } else {
+                    alert(res.error || 'Failed to submit inquiry')
+                  }
+                  setIsSubmitting(false)
+                }}
                 className="space-y-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-brand-gold mb-2">Business Name</label>
-                    <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors" />
+                    <input required name="businessName" type="text" placeholder="e.g. Kyoto Halal Restaurant" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-brand-gold mb-2">Contact Person</label>
-                    <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors" />
+                    <input required name="contactPerson" type="text" placeholder="e.g. Tariq Ahmed" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors" />
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-brand-gold mb-2">WhatsApp / Phone</label>
-                    <input required type="text" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors" />
+                    <input required name="phone" type="text" placeholder="e.g. 090-1234-5678" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-brand-gold mb-2">Business Type</label>
+                    <select name="businessType" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors appearance-none">
+                      <option className="text-black bg-white" value="Restaurant / Cafe">Restaurant / Cafe</option>
+                      <option className="text-black bg-white" value="Grocery Store / Supermarket">Grocery Store / Supermarket</option>
+                      <option className="text-black bg-white" value="Caterer / Event Planner">Caterer / Event Planner</option>
+                      <option className="text-black bg-white" value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-brand-gold mb-2">Primary Interest</label>
+                    <select name="primaryInterest" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors appearance-none">
+                      <option className="text-black bg-white" value="Fresh Produce (Sri Lanka/India)">Fresh Produce (Sri Lanka/India)</option>
+                      <option className="text-black bg-white" value="Halal Meats & Poultry">Halal Meats & Poultry</option>
+                      <option className="text-black bg-white" value="Spices & Dry Goods">Spices & Dry Goods</option>
+                      <option className="text-black bg-white" value="Ready-to-Eat / Short Eats">Ready-to-Eat / Short Eats</option>
+                      <option className="text-black bg-white" value="Mixed Groceries">Mixed Groceries</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-brand-gold mb-2">Est. Monthly Volume</label>
-                    <select className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors appearance-none">
-                      <option className="text-black bg-white">Less than ¥100,000</option>
-                      <option className="text-black bg-white">¥100,000 - ¥500,000</option>
-                      <option className="text-black bg-white">¥500,000 - ¥2,000,000</option>
-                      <option className="text-black bg-white">¥2,000,000+</option>
+                    <select name="estimatedVolume" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors appearance-none">
+                      <option className="text-black bg-white" value="Less than ¥100,000">Less than ¥100,000</option>
+                      <option className="text-black bg-white" value="¥100,000 - ¥500,000">¥100,000 - ¥500,000</option>
+                      <option className="text-black bg-white" value="¥500,000 - ¥2,000,000">¥500,000 - ¥2,000,000</option>
+                      <option className="text-black bg-white" value="¥2,000,000+">¥2,000,000+</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-brand-gold mb-2">Sourcing Requests (Optional)</label>
-                  <textarea rows={4} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors resize-none" placeholder="What ingredients do you need?"></textarea>
+                  <textarea name="sourcingRequests" rows={4} className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-brand-gold transition-colors resize-none" placeholder="e.g. We need 50kg of green chilies weekly, or looking for specific Sri Lankan spices..."></textarea>
                 </div>
 
-                <button type="submit" className="w-full py-4 bg-brand-gold hover:bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-xl transition-colors">
-                  Submit Inquiry
+                <button disabled={isSubmitting} type="submit" className="w-full py-4 bg-brand-gold hover:bg-yellow-500 text-black font-black uppercase tracking-widest text-sm rounded-xl transition-colors disabled:opacity-50">
+                  {isSubmitting ? 'Submitting...' : 'Submit Inquiry'}
                 </button>
               </form>
             )}

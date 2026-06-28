@@ -250,3 +250,34 @@ GRANT SELECT, INSERT ON coupon_usages TO authenticated, anon;
 ALTER TABLE coupons ADD COLUMN limit_per_customer BOOLEAN DEFAULT true NOT NULL;
 
 ALTER VIEW public.customer_crm SET (security_invoker = on);
+
+-- Create wholesale_inquiries table
+CREATE TABLE IF NOT EXISTS wholesale_inquiries (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  business_name TEXT NOT NULL,
+  contact_person TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  business_type TEXT NOT NULL,
+  primary_interest TEXT NOT NULL,
+  estimated_volume TEXT NOT NULL,
+  sourcing_requests TEXT,
+  status TEXT DEFAULT 'New' CHECK (status IN ('New', 'Contacted', 'Qualified', 'Rejected')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE wholesale_inquiries ENABLE ROW LEVEL SECURITY;
+
+-- Allow public inserts (anyone can submit the form)
+CREATE POLICY "Allow public insert to wholesale_inquiries"
+ON wholesale_inquiries FOR INSERT
+TO public
+WITH CHECK (true);
+
+-- Allow authenticated admins to view and manage inquiries
+CREATE POLICY "Allow authenticated full access to wholesale_inquiries"
+ON wholesale_inquiries FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+

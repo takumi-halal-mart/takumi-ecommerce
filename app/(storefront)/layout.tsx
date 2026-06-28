@@ -15,7 +15,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
           </div>
         )}
         {/* High-density Marketplace Navigation */}
-        <MarketplaceNavbar />
+        <MarketplaceNavbar /> 
         
         {/* 
           Main content area flex-grows to push the footer to the bottom.

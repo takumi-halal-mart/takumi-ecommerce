@@ -16,7 +16,8 @@ export function MarketplaceNavbar() {
     { name: 'Home', href: '/' },
     { name: 'Store', href: '/shop' },
     { name: 'Categories', href: '/categories' },
-    { name: 'Wholesale', href: '/wholesale' }
+    { name: 'Wholesale', href: '/wholesale' },
+    { name: 'About Us', href: '/about' }
   ]
 
   return (
@@ -29,9 +30,8 @@ export function MarketplaceNavbar() {
             
             {/* Left: Brand Logo */}
             <div className="flex-shrink-0">
-              <Link href="/" className="flex items-center gap-2 sm:gap-3 text-2xl font-black text-black tracking-widest uppercase hover:opacity-80 transition-opacity">
-                <Image src="/takumi.webp" alt="Takumi Logo" width={40} height={40} className="object-contain" />
-                <span className="hidden sm:block">TAKUMI</span>
+              <Link href="/" className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
+                <Image src="/takumi2.png" alt="Takumi Logo" width={140} height={45} className="object-contain" priority /> 
               </Link>
             </div>
 

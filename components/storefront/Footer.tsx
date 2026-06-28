@@ -79,7 +79,7 @@ export function Footer() {
             © 2026 Takumi Halal Mart.
           </p>
           <p className="text-xs text-gray-600 font-medium tracking-wider uppercase">
-            Engineered by <span className="text-brand-gold">Mr² Labs</span>
+            Engineered by <span className="text-brand-gold">Knight Graphics</span>
           </p>
         </div>
       </div>

@@ -156,3 +156,81 @@ export async function deleteOrder(orderId: string) {
     return { error: 'An unexpected error occurred while deleting the order.' }
   }
 }
+
+export interface WholesaleInquiry {
+  id: string
+  business_name: string
+  contact_person: string
+  phone: string
+  business_type: string
+  primary_interest: string
+  estimated_volume: string
+  sourcing_requests: string | null
+  status: 'New' | 'Contacted' | 'Qualified' | 'Rejected'
+  created_at: string
+}
+
+export async function getWholesaleInquiries(): Promise<{ data: WholesaleInquiry[] | null; error: string | null }> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('wholesale_inquiries')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Failed to fetch inquiries:', error)
+      return { data: null, error: error.message }
+    }
+
+    return { data: data as WholesaleInquiry[], error: null }
+  } catch (error: any) {
+    console.error('getWholesaleInquiries exception:', error)
+    return { data: null, error: 'An unexpected error occurred while fetching inquiries.' }
+  }
+}
+
+export async function updateInquiryStatus(id: string, newStatus: string) {
+  try {
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from('wholesale_inquiries')
+      .update({ status: newStatus })
+      .eq('id', id)
+
+    if (error) {
+      console.error('Update inquiry status error:', error)
+      return { error: error.message }
+    }
+
+    revalidatePath('/admin/orders/inquiries')
+    return { success: true }
+  } catch (error: any) {
+    console.error('Update inquiry status exception:', error)
+    return { error: 'An unexpected error occurred.' }
+  }
+}
+
+export async function deleteInquiry(id: string) {
+  try {
+    const supabase = await createClient()
+
+    const { error } = await supabase
+      .from('wholesale_inquiries')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Delete inquiry error:', error)
+      return { error: error.message }
+    }
+
+    revalidatePath('/admin/orders/inquiries')
+    return { success: true }
+  } catch (error: any) {
+    console.error('Delete inquiry exception:', error)
+    return { error: 'An unexpected error occurred.' }
+  }
+}

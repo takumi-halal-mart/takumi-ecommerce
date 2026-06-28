@@ -373,3 +373,43 @@ export async function validateCouponCode(code: string, subtotal: number) {
     return { success: false, error: 'An unexpected error occurred.' }
   }
 }
+
+export async function submitWholesaleInquiry(formData: FormData) {
+  try {
+    const supabase = await createClient()
+    
+    const businessName = formData.get('businessName') as string
+    const contactPerson = formData.get('contactPerson') as string
+    const phone = formData.get('phone') as string
+    const businessType = formData.get('businessType') as string
+    const primaryInterest = formData.get('primaryInterest') as string
+    const estimatedVolume = formData.get('estimatedVolume') as string
+    const sourcingRequests = formData.get('sourcingRequests') as string
+
+    if (!businessName || !contactPerson || !phone) {
+      return { success: false, error: 'Required fields missing.' }
+    }
+
+    const { error } = await supabase
+      .from('wholesale_inquiries')
+      .insert({
+        business_name: businessName,
+        contact_person: contactPerson,
+        phone,
+        business_type: businessType,
+        primary_interest: primaryInterest,
+        estimated_volume: estimatedVolume,
+        sourcing_requests: sourcingRequests
+      })
+
+    if (error) {
+      console.error('Supabase error inserting inquiry:', error)
+      return { success: false, error: 'Failed to submit inquiry. Please try again.' }
+    }
+
+    return { success: true, error: null }
+  } catch (error: any) {
+    console.error('Exception submitting wholesale inquiry:', error)
+    return { success: false, error: 'An unexpected error occurred.' }
+  }
+}

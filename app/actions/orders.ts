@@ -73,7 +73,7 @@ export async function placeOrder(formData: FormData, cartItems: CartItem[], tota
     // Prepare order_items
     const orderItems = cartItems.map(item => ({
       order_id: orderId,
-      product_id: item.product.id,
+      product_id: item.product.id.replace('_bulk', ''),
       quantity: item.quantity,
       price_at_purchase: item.product.retail_price || 0
     }))
