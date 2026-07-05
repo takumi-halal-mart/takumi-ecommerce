@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="bg-brand-black text-white pt-24 pb-10 border-t-4 border-brand-gold">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-8 mb-16">
           
           {/* Column 1: Brand Info */}
           <div className="space-y-6">
@@ -40,36 +40,17 @@ export function Footer() {
               <li>
                 <Link href="/contact" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Contact Us</Link>
               </li>
-              <li>
-                <Link href="/shipping" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Shipping Policy</Link>
-              </li>
+
               <li>
                 <Link href="/faq" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">FAQ</Link>
+              </li>
+              <li>
+                <Link href="/tokushoho" className="text-gray-400 hover:text-white transition-colors text-sm font-medium">Legal (Tokushoho)</Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 4: Newsletter */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-brand-gold mb-6">Join the List</h4>
-            <p className="text-gray-400 text-sm mb-4">
-              Subscribe for exclusive access to VIP discounts and new arrivals.
-            </p>
-            <form className="relative flex items-center group">
-              <input 
-                type="email" 
-                placeholder="Enter your email address" 
-                required
-                className="w-full bg-brand-gray/30 border border-brand-border text-white px-4 py-3 text-sm rounded-lg focus:outline-none focus:border-brand-gold transition-colors placeholder-gray-600"
-              />
-              <button 
-                type="submit"
-                className="absolute right-2 p-2 text-brand-gold hover:text-black hover:bg-brand-gold rounded-md transition-all"
-              >
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
+
 
         </div>
 
