@@ -27,7 +27,7 @@ export function HeroCarousel({ banners }: HeroCarouselProps) {
   // Fallback if absolutely no banners are present
   if (!banners || banners.length === 0) {
     return (
-      <section className="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[2.5/1] relative flex items-center justify-center bg-gray-100">
+      <section className="w-full aspect-[2/1] md:aspect-[2.5/1] relative flex items-center justify-center bg-gray-100">
         <Image
           src="/default-hero.webp"
           alt="Hero Background"
@@ -56,7 +56,7 @@ export function HeroCarousel({ banners }: HeroCarouselProps) {
   }
 
   return (
-    <section className="w-full aspect-[4/3] sm:aspect-[16/9] lg:aspect-[2.5/1] relative flex items-center justify-center overflow-hidden bg-gray-100">
+    <section className="w-full aspect-[2/1] md:aspect-[2.5/1] relative flex items-center justify-center overflow-hidden bg-gray-100">
       {banners.map((banner, index) => {
         const isActive = index === currentIndex
         const heroImage = banner.image_url || '/default-hero.webp'
