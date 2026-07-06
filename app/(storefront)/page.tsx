@@ -5,9 +5,22 @@ import { MarketplaceCard } from '@/components/storefront/MarketplaceCard'
 import { HeroCarousel } from '@/components/storefront/HeroCarousel'
 import { ArrowRight, ShoppingBag } from 'lucide-react'
 
-export const metadata = {
-  title: 'Takumi | Premium Halal Groceries in Japan',
-  description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials.',
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Takumi | Premium Wholesale & Retail Marketplace',
+  description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials. Shop wholesale and retail at the best prices.',
+  openGraph: {
+    title: 'Takumi | Premium Wholesale & Retail Marketplace',
+    description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials.',
+    url: 'https://takumi.com',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Takumi | Premium Wholesale & Retail Marketplace',
+    description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials.',
+  }
 }
 
 export default async function StorefrontPage() {
@@ -122,6 +135,40 @@ export default async function StorefrontPage() {
         })}
       </div>
       
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": "https://takumi.com/#organization",
+                "name": "Takumi E-Commerce",
+                "url": "https://takumi.com",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://takumi.com/icon.png"
+                },
+                "contactPoint": {
+                  "@type": "ContactPoint",
+                  "contactType": "customer support"
+                }
+              },
+              {
+                "@type": "WebSite",
+                "@id": "https://takumi.com/#website",
+                "url": "https://takumi.com",
+                "name": "Takumi",
+                "description": "Premium Wholesale & Retail E-Commerce Marketplace",
+                "publisher": {
+                  "@id": "https://takumi.com/#organization"
+                }
+              }
+            ]
+          })
+        }}
+      />
     </div>
   )
 }

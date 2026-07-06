@@ -6,11 +6,29 @@ import { ProductActions } from '@/components/storefront/ProductActions'
 import { ProductGallery } from '@/components/storefront/ProductGallery'
 import { MarketplaceCard } from '@/components/storefront/MarketplaceCard'
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+import { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const { id } = await params
   const { data: product } = await getProductById(id)
   if (!product) return { title: 'Product Not Found | Takumi' }
-  return { title: `${product.name} | Takumi Marketplace` }
+  
+  return { 
+    title: `${product.name} | Takumi Marketplace`,
+    description: product.description || `Buy ${product.name} at Takumi Marketplace. Premium quality, best prices.`,
+    openGraph: {
+      title: `${product.name} | Takumi`,
+      description: product.description || `Buy ${product.name} at Takumi Marketplace.`,
+      images: [{ url: product.image_url || '/takumi_white.png' }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.name} | Takumi`,
+      description: product.description || `Buy ${product.name} at Takumi Marketplace.`,
+      images: [product.image_url || '/takumi_white.png'],
+    }
+  }
 }
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
@@ -151,6 +169,32 @@ export default async function ProductPage({ params }: { params: { id: string } }
         )}
 
       </div>
+      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.name,
+            "image": product.image_url ? [product.image_url] : [],
+            "description": product.description || `Premium ${product.name} at Takumi Marketplace.`,
+            "sku": product.id,
+            "offers": {
+              "@type": "Offer",
+              "url": `https://takumi.com/product/${product.id}`,
+              "priceCurrency": "JPY",
+              "price": product.retail_price,
+              "itemCondition": "https://schema.org/NewCondition",
+              "availability": product.stock_count > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "seller": {
+                "@type": "Organization",
+                "name": "Takumi"
+              }
+            }
+          })
+        }}
+      />
     </div>
   )
 }

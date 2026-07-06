@@ -1,9 +1,22 @@
 import { getStoreCategories, getPaginatedRetailProducts } from '@/app/actions/storefront'
 import { ShopClient } from '@/components/storefront/ShopClient'
 
-export const metadata = {
-  title: 'Shop | Takumi Marketplace',
-  description: 'Browse our premium collection of authentic halal groceries and essentials.',
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Shop All Products | Takumi Marketplace',
+  description: 'Browse our premium collection of authentic groceries, meat, spices, and daily essentials at Takumi Marketplace.',
+  openGraph: {
+    title: 'Shop All Products | Takumi Marketplace',
+    description: 'Browse our premium collection of authentic groceries, meat, and essentials.',
+    url: 'https://takumi.com/shop',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Shop All Products | Takumi Marketplace',
+    description: 'Browse our premium collection of authentic groceries, meat, and essentials.',
+  }
 }
 
 export default async function ShopPage(props: {
