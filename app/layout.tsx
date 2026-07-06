@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://takumi.com"), // Placeholder URL, replace with actual production URL
+  metadataBase: new URL("https://takumihalalmart.store"),
   title: {
     template: "%s | Takumi",
     default: "Takumi | Premium Wholesale & Retail E-Commerce",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Takumi | Premium Wholesale & Retail E-Commerce",
     description: "Discover premium quality products at Takumi. Your trusted marketplace for wholesale and retail.",
-    url: "https://takumi.com",
+    url: "https://takumihalalmart.store",
     siteName: "Takumi",
     images: [
       {

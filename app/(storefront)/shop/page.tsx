@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Shop All Products | Takumi Marketplace',
     description: 'Browse our premium collection of authentic groceries, meat, and essentials.',
-    url: 'https://takumi.com/shop',
+    url: 'https://takumihalalmart.store/shop',
     type: 'website',
   },
   twitter: {

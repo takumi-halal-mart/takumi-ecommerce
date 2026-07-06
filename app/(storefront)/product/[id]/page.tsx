@@ -182,7 +182,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
             "sku": product.id,
             "offers": {
               "@type": "Offer",
-              "url": `https://takumi.com/product/${product.id}`,
+              "url": `https://takumihalalmart.store/product/${product.id}`,
               "priceCurrency": "JPY",
               "price": product.retail_price,
               "itemCondition": "https://schema.org/NewCondition",

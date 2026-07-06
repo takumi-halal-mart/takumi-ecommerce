@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { getFeaturedProducts } from '@/app/actions/storefront'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://takumi.com' // Replace with your actual production URL
+  const baseUrl = 'https://takumihalalmart.store'
 
   const routes: MetadataRoute.Sitemap = [
     {

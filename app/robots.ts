@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/admin/', '/api/', '/cart', '/checkout'],
     },
-    sitemap: 'https://takumi.com/sitemap.xml', // Replace with your actual production URL
+    sitemap: 'https://takumihalalmart.store/sitemap.xml',
   }
 }

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Takumi | Premium Wholesale & Retail Marketplace',
     description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials.',
-    url: 'https://takumi.com',
+    url: 'https://takumihalalmart.store',
     type: 'website',
   },
   twitter: {
@@ -143,12 +143,12 @@ export default async function StorefrontPage() {
             "@graph": [
               {
                 "@type": "Organization",
-                "@id": "https://takumi.com/#organization",
+                "@id": "https://takumihalalmart.store/#organization",
                 "name": "Takumi E-Commerce",
-                "url": "https://takumi.com",
+                "url": "https://takumihalalmart.store",
                 "logo": {
                   "@type": "ImageObject",
-                  "url": "https://takumi.com/icon.png"
+                  "url": "https://takumihalalmart.store/icon.png"
                 },
                 "contactPoint": {
                   "@type": "ContactPoint",
@@ -157,12 +157,12 @@ export default async function StorefrontPage() {
               },
               {
                 "@type": "WebSite",
-                "@id": "https://takumi.com/#website",
-                "url": "https://takumi.com",
+                "@id": "https://takumihalalmart.store/#website",
+                "url": "https://takumihalalmart.store",
                 "name": "Takumi",
                 "description": "Premium Wholesale & Retail E-Commerce Marketplace",
                 "publisher": {
-                  "@id": "https://takumi.com/#organization"
+                  "@id": "https://takumihalalmart.store/#organization"
                 }
               }
             ]
