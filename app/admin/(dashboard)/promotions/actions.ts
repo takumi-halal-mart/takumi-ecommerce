@@ -84,6 +84,61 @@ export async function createBanner(prevState: any, formData: FormData) {
   }
 }
 
+export async function updateBanner(bannerId: string, prevState: any, formData: FormData) {
+  try {
+    const supabase = await createClient()
+
+    const heading = formData.get('heading') as string || null
+    const subtext = formData.get('subtext') as string || null
+    const redirect_url = formData.get('redirect_url') as string || null
+    
+    const updatePayload: any = {
+      heading,
+      subtext,
+      redirect_url,
+    }
+
+    // 1. Handle Optional Image Upload
+    const imageFile = formData.get('image') as File | null
+    if (imageFile && imageFile.size > 0) {
+      const fileExt = imageFile.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('banner-images')
+        .upload(fileName, imageFile)
+
+      if (uploadError) {
+        console.error('Banner upload error:', uploadError)
+        return { error: 'Failed to upload new banner image.' }
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('banner-images')
+        .getPublicUrl(fileName)
+
+      updatePayload.image_url = publicUrlData.publicUrl
+    }
+
+    // 2. Update Database
+    const { error: updateError } = await supabase
+      .from('promotional_banners')
+      .update(updatePayload)
+      .eq('id', bannerId)
+
+    if (updateError) {
+      console.error('Database update banner error:', updateError)
+      return { error: updateError.message }
+    }
+
+    revalidatePath('/admin/promotions')
+    return { success: true, error: '' }
+  } catch (error: any) {
+    console.error('Update banner exception:', error)
+    return { error: 'An unexpected error occurred while updating the banner.' }
+  }
+}
+
 export async function toggleBannerStatus(bannerId: string, currentStatus: boolean) {
   try {
     const supabase = await createClient()

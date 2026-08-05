@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, CheckCircle, Truck, Tag, X, CreditCard, MessageCircle } from 'lucide-react'
 import { useCart } from '@/components/providers/CartProvider'
-import { getStoreSettings, StoreSettings, validateCouponCode } from '@/app/actions/storefront'
+import { getStoreSettings, StoreSettings, validateCouponCode, getDeliveryZones } from '@/app/actions/storefront'
 import { placeOrder } from '@/app/actions/orders'
 
 function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
@@ -31,6 +31,9 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
 
   const numericQty = typeof localQty === 'number' ? localQty : 0;
 
+  const isAutoWholesale = item.product.is_wholesale && item.product.wholesale_moq && numericQty >= item.product.wholesale_moq;
+  const currentPrice = isAutoWholesale ? item.product.wholesale_price : item.product.retail_price;
+
   return (
     <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 items-center">
       <div className="relative w-24 h-24 bg-gray-50 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
@@ -45,8 +48,15 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
       
       <div className="flex-grow text-center sm:text-left w-full">
         <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">{item.product.name}</h3>
-        <div className="text-sm text-gray-500 font-medium mb-3">
-          ¥{item.product.retail_price?.toLocaleString()} / {item.product.unit_type || 'piece'}
+        <div className="flex items-center flex-wrap gap-2 mb-3">
+          <div className="text-sm text-gray-500 font-medium">
+            ¥{currentPrice?.toLocaleString()} / {item.product.unit_type || 'piece'}
+          </div>
+          {isAutoWholesale && (
+            <div className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest rounded-sm border border-green-200">
+              Wholesale Discount Applied
+            </div>
+          )}
         </div>
         
         <div className="flex items-center justify-center sm:justify-start gap-4">
@@ -100,7 +110,7 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
       </div>
       
       <div className="sm:text-right font-black text-xl text-black">
-        ¥{((item.product.retail_price || 0) * item.quantity).toLocaleString()}
+        ¥{((currentPrice || 0) * numericQty).toLocaleString()}
       </div>
     </div>
   )
@@ -116,6 +126,10 @@ export default function CartPage() {
   const [settings, setSettings] = useState<StoreSettings | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'WhatsApp' | 'Stripe'>('WhatsApp')
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false)
+  
+  // Delivery Zones
+  const [deliveryZones, setDeliveryZones] = useState<any[]>([])
+  const [deliveryCity, setDeliveryCity] = useState('')
 
   // Coupon State
   const [couponCode, setCouponCode] = useState('')
@@ -129,13 +143,20 @@ export default function CartPage() {
   const [couponError, setCouponError] = useState<string | null>(null)
 
   React.useEffect(() => {
-    async function fetchSettings() {
-      const res = await getStoreSettings()
+    async function fetchSettingsAndZones() {
+      const [res, zonesRes] = await Promise.all([
+        getStoreSettings(),
+        getDeliveryZones()
+      ])
+      
       if (res.success && res.data) {
         setSettings(res.data)
       }
+      if (zonesRes.success && zonesRes.data) {
+        setDeliveryZones(zonesRes.data)
+      }
     }
-    fetchSettings()
+    fetchSettingsAndZones()
   }, [])
 
   React.useEffect(() => {
@@ -156,7 +177,9 @@ export default function CartPage() {
   }, [items.length])
 
   const subtotal = items.reduce((total, item) => {
-    return total + ((item.product.retail_price || 0) * item.quantity)
+    const isAutoWholesale = item.product.is_wholesale && item.product.wholesale_moq && item.quantity >= item.product.wholesale_moq;
+    const currentPrice = isAutoWholesale ? item.product.wholesale_price : item.product.retail_price;
+    return total + ((currentPrice || 0) * item.quantity)
   }, 0)
 
   let discountAmount = 0
@@ -170,9 +193,22 @@ export default function CartPage() {
 
   const subtotalAfterDiscount = Math.max(0, subtotal - discountAmount)
 
-  const deliveryFee = settings 
-    ? (subtotalAfterDiscount >= settings.free_shipping_threshold ? 0 : settings.delivery_fee)
-    : 0 // Default to 0 while loading or on error
+  let deliveryFee = 0;
+  let isSpecificZone = false;
+
+  if (deliveryCity) {
+    const selectedZone = deliveryZones.find(z => z.city_name.toLowerCase() === deliveryCity.trim().toLowerCase())
+    if (selectedZone) {
+      deliveryFee = selectedZone.delivery_fee
+      isSpecificZone = true
+    }
+  }
+
+  if (!isSpecificZone && settings) {
+    if (subtotalAfterDiscount < settings.free_shipping_threshold) {
+      deliveryFee = settings.delivery_fee
+    }
+  }
   
   const finalTotal = subtotalAfterDiscount + deliveryFee
 
@@ -203,14 +239,45 @@ export default function CartPage() {
     setIsSubmitting(true)
     setError(null)
     
+    const formData = new FormData(e.currentTarget)
+    
     if (paymentMethod === 'Stripe') {
-      // Mock Stripe redirect for now
-      setError('Stripe Gateway is currently in Sandbox mode. Please use WhatsApp Checkout for live orders.')
-      setIsSubmitting(false)
-      return
+      try {
+        const stripeItems = items.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity
+        }));
+        
+        const response = await fetch('/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: stripeItems,
+            customerName: formData.get('customerName'),
+            customerPhone: formData.get('customerPhone'),
+            deliveryAddress: formData.get('deliveryAddress'),
+            deliveryCity: deliveryCity,
+            couponId: appliedCoupon?.id || null
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to initialize Stripe checkout');
+        }
+        
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } catch (err: any) {
+        setError(err.message || 'An error occurred connecting to Stripe.');
+        setIsSubmitting(false);
+        return;
+      }
     }
     
-    const formData = new FormData(e.currentTarget)
     formData.append('paymentMethod', paymentMethod)
     
     // Front-end LocalStorage validation to obscure backend phone checks
@@ -249,7 +316,9 @@ export default function CartPage() {
       // WhatsApp Pre-filled message generation
       if (settings?.whatsapp_number) {
         const customerName = formData.get('customerName') as string
-        const customerAddress = formData.get('deliveryAddress') as string
+        const baseAddress = formData.get('deliveryAddress') as string
+        const customerAddress = deliveryCity ? `${deliveryCity} - ${baseAddress}` : baseAddress
+        
         
         let message = `*NEW ORDER - Takumi Marketplace*\n\n`
         message += `*Customer:* ${customerName}\n`
@@ -257,7 +326,9 @@ export default function CartPage() {
         message += `*Items Ordered:*\n`
         
         items.forEach(item => {
-          message += `- ${item.quantity}x ${item.product.name} (¥${(item.quantity * (item.product.retail_price || 0)).toLocaleString('ja-JP')})\n`
+          const isAutoWholesale = item.product.is_wholesale && item.product.wholesale_moq && item.quantity >= item.product.wholesale_moq;
+          const currentPrice = isAutoWholesale ? item.product.wholesale_price : item.product.retail_price;
+          message += `- ${item.quantity}x ${item.product.name} ${isAutoWholesale ? '(Wholesale)' : ''} (¥${(item.quantity * (currentPrice || 0)).toLocaleString('ja-JP')})\n`
         })
         
         message += `\n*Subtotal:* ¥${subtotal.toLocaleString('ja-JP')}\n`
@@ -453,6 +524,35 @@ export default function CartPage() {
                       className="w-full bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-xl outline-none focus:bg-white focus:border-black transition-colors"
                     />
                   </div>
+                  
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Delivery City</label>
+                    <input 
+                      type="text"
+                      name="deliveryCity"
+                      required
+                      placeholder="Type your city (e.g. Mobara, Tokyo)"
+                      value={deliveryCity}
+                      onChange={(e) => setDeliveryCity(e.target.value)}
+                      list="city-suggestions"
+                      className="w-full bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-xl outline-none focus:bg-white focus:border-black transition-colors"
+                    />
+                    <datalist id="city-suggestions">
+                      {deliveryZones.map(zone => (
+                        <option key={zone.id} value={zone.city_name}>
+                          {zone.delivery_fee === 0 ? 'Free Delivery' : `¥${zone.delivery_fee}`}
+                        </option>
+                      ))}
+                    </datalist>
+                    {deliveryCity && (
+                      <p className={`text-xs mt-2 ml-1 font-medium ${isSpecificZone ? 'text-green-600' : 'text-gray-500'}`}>
+                        {isSpecificZone 
+                          ? (deliveryFee === 0 ? 'Free Delivery Zone!' : `Special Delivery Fee: ¥${deliveryFee.toLocaleString()}`)
+                          : 'Standard Delivery Fee applies.'}
+                      </p>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Delivery Address</label>
                     <textarea 

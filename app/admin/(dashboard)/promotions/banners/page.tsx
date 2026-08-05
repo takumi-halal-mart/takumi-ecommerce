@@ -3,7 +3,8 @@ import { createClient } from '@/utils/supabase/server'
 import { deleteBanner, PromotionalBanner } from '../actions'
 import { BannerUploadForm } from './BannerUploadForm'
 import { BannerToggle } from './BannerToggle'
-import { Trash2, Link as LinkIcon, Image as ImageIcon } from 'lucide-react'
+import { Trash2, Link as LinkIcon, Image as ImageIcon, Edit3 } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Live Banners | Takumi Admin',
@@ -107,15 +108,25 @@ export default async function BannersPage() {
                       
                       <div className="h-8 w-px bg-brand-border"></div>
 
-                      <form action={deleteAction as any}>
-                        <button 
-                          type="submit" 
-                          title="Delete Banner"
-                          className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors border border-transparent hover:border-red-900/50"
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/admin/promotions/banners/${banner.id}/edit`}
+                          title="Edit Banner"
+                          className="p-2 text-gray-500 hover:text-brand-gold hover:bg-brand-gold/10 rounded-lg transition-colors border border-transparent hover:border-brand-gold/50"
                         >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </form>
+                          <Edit3 className="w-5 h-5" />
+                        </Link>
+
+                        <form action={deleteAction as any}>
+                          <button 
+                            type="submit" 
+                            title="Delete Banner"
+                            className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors border border-transparent hover:border-red-900/50"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </form>
+                      </div>
                     </div>
                   </div>
 

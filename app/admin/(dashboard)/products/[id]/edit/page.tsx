@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { EditProductForm } from './EditProductForm'
 import { Product } from '../../actions'
+import { getCategories } from '@/app/admin/(dashboard)/categories/actions'
 
 export const metadata = {
   title: 'Edit Product | Takumi Admin',
@@ -25,9 +26,13 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     redirect('/admin/products')
   }
 
+  // Fetch live categories securely on the server
+  const categoriesResult = await getCategories()
+  const initialCategories = categoriesResult.data || []
+
   return (
     <div className="max-w-4xl mx-auto">
-      <EditProductForm product={product as Product} />
+      <EditProductForm product={product as Product} initialCategories={initialCategories} />
     </div>
   )
 }

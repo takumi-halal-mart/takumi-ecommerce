@@ -10,6 +10,8 @@ export interface CartItem {
     image_url: string | null
     unit_type?: string | null
     wholesale_moq?: number | null
+    wholesale_price?: number | null
+    is_wholesale?: boolean
   }
   quantity: number
 }

@@ -1,5 +1,6 @@
-import { getStoreSettings } from './actions'
+import { getStoreSettings, getAdminDeliveryZones } from './actions'
 import { SettingsForm } from './SettingsForm'
+import { DeliveryZonesManager } from './DeliveryZonesManager'
 import { Settings, AlertCircle } from 'lucide-react'
 
 export const metadata = {
@@ -7,7 +8,10 @@ export const metadata = {
 }
 
 export default async function SettingsPage() {
-  const { data: settings, error } = await getStoreSettings()
+  const [{ data: settings, error }, deliveryZones] = await Promise.all([
+    getStoreSettings(),
+    getAdminDeliveryZones()
+  ])
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
@@ -30,7 +34,10 @@ export default async function SettingsPage() {
           <p className="text-sm">{error}</p>
         </div>
       ) : settings ? (
-        <SettingsForm initialSettings={settings} />
+        <>
+          <SettingsForm initialSettings={settings} />
+          <DeliveryZonesManager initialZones={deliveryZones} />
+        </>
       ) : (
         <div className="p-12 text-center bg-brand-gray/10 rounded-2xl border border-brand-border/50">
           <Settings className="w-12 h-12 text-gray-500 mx-auto mb-4 opacity-50" />

@@ -14,7 +14,11 @@ export async function placeOrder(formData: FormData, cartItems: CartItem[], tota
 
     const customerName = formData.get('customerName') as string
     const customerPhone = formData.get('customerPhone') as string
-    const deliveryAddress = formData.get('deliveryAddress') as string
+    const rawAddress = formData.get('deliveryAddress') as string
+    const deliveryCity = formData.get('deliveryCity') as string
+    
+    const deliveryAddress = deliveryCity ? `${deliveryCity} - ${rawAddress}` : rawAddress
+    
     const paymentMethod = formData.get('paymentMethod') as string || 'WhatsApp'
 
     if (!customerName || !customerPhone || !deliveryAddress) {

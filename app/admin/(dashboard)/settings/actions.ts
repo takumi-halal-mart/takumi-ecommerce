@@ -83,3 +83,73 @@ export async function updateStoreSettings(prevState: any, formData: FormData) {
     return { success: false, error: 'An unexpected error occurred while saving.' }
   }
 }
+
+
+
+export async function getAdminDeliveryZones() {
+  try {
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    const { data, error } = await supabaseAdmin
+      .from('delivery_zones')
+      .select('*')
+      .order('city_name', { ascending: true })
+    
+    if (error) return []
+    return data || []
+  } catch {
+    return []
+  }
+}
+
+import { createClient as createAdminClient } from '@supabase/supabase-js'
+
+export async function addDeliveryZone(city_name: string, delivery_fee: number) {
+  try {
+    // Use the Service Role Key to completely bypass RLS when performing Admin actions
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    const { data, error } = await supabaseAdmin
+      .from('delivery_zones')
+      .insert({ city_name, delivery_fee })
+      .select()
+      .single()
+
+    if (error) return { success: false, error: error.message }
+    
+    revalidatePath('/admin/settings')
+    revalidatePath('/cart')
+    return { success: true, data }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}
+
+export async function deleteDeliveryZone(id: string) {
+  try {
+    // Use the Service Role Key to completely bypass RLS when performing Admin actions
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    const { error } = await supabaseAdmin
+      .from('delivery_zones')
+      .delete()
+      .eq('id', id)
+
+    if (error) return { success: false, error: error.message }
+    
+    revalidatePath('/admin/settings')
+    revalidatePath('/cart')
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}

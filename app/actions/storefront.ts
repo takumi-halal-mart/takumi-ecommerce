@@ -413,3 +413,30 @@ export async function submitWholesaleInquiry(formData: FormData) {
     return { success: false, error: 'An unexpected error occurred.' }
   }
 }
+
+import { createClient as createAdminClient } from '@supabase/supabase-js'
+
+export async function getDeliveryZones() {
+  try {
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    
+    const { data, error } = await supabaseAdmin
+      .from('delivery_zones')
+      .select('*')
+      .eq('is_active', true)
+      .order('city_name', { ascending: true })
+
+    if (error) {
+      console.error('Error fetching delivery zones:', error)
+      return { success: false, data: [] }
+    }
+
+    return { success: true, data }
+  } catch (err) {
+    console.error('Unexpected error fetching delivery zones:', err)
+    return { success: false, data: [] }
+  }
+}

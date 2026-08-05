@@ -6,8 +6,10 @@ import { useActionState } from 'react'
 import { UploadCloud, Image as ImageIcon, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { updateProduct, Product } from '../../actions'
+import { CategoryCombobox } from '@/components/admin/CategoryCombobox'
+import { Category } from '@/app/admin/(dashboard)/categories/actions'
 
-export function EditProductForm({ product }: { product: Product }) {
+export function EditProductForm({ product, initialCategories }: { product: Product, initialCategories: Category[] }) {
   const router = useRouter()
   
   // Bind the productId to the server action
@@ -15,7 +17,11 @@ export function EditProductForm({ product }: { product: Product }) {
   const [state, formAction, isServerPending] = useActionState(updateProductWithId, { error: '', success: false })
   
   // Local state initialized with existing product data
-  const [isWholesale, setIsWholesale] = useState(product.is_wholesale)
+  const initialVisibilityMode = product.is_retail && product.is_wholesale ? 'both' 
+                              : product.is_wholesale ? 'wholesale' 
+                              : 'retail';
+  const [visibilityMode, setVisibilityMode] = useState<'retail' | 'wholesale' | 'both'>(initialVisibilityMode)
+  const [unitType, setUnitType] = useState(product.unit_type || '')
   const [dragActive, setDragActive] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   
@@ -120,8 +126,19 @@ export function EditProductForm({ product }: { product: Product }) {
 
   const isSubmitting = isPending || isServerPending || state?.success
 
+  // Dynamic Unit Helper
+  const getStockHelperText = (unit: string) => {
+    if (!unit) return 'Total quantity available.'
+    const lowerUnit = unit.toLowerCase().trim()
+    if (/\d+(g|kg|ml|l|oz|lb)$/i.test(lowerUnit)) {
+      return `How many ${unit} portions do you have?`
+    }
+    const pluralUnit = lowerUnit.endsWith('s') ? lowerUnit : `${lowerUnit}s`
+    return `How many ${pluralUnit} do you have?`
+  }
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
       
       <div className="flex items-center space-x-4">
         <Link href="/admin/products" className="p-2 bg-brand-gray/50 text-gray-400 hover:text-white rounded-lg hover:bg-brand-gray transition-colors border border-transparent hover:border-brand-border">
@@ -195,38 +212,52 @@ export function EditProductForm({ product }: { product: Product }) {
                   <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Product Name</label>
                   <input
                     name="name" type="text" required defaultValue={product.name}
-                    className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder-gray-600"
+                    placeholder="e.g. Premium Matcha Powder"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Product Category</label>
+                  <CategoryCombobox initialCategories={initialCategories} defaultValue={product.category} />
+                  <p className="text-[10px] text-gray-500 mt-1.5 uppercase tracking-wider">Select a category or dynamically create a new one.</p>
                 </div>
 
                 <div>
                   <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Description</label>
                   <textarea
                     name="description" rows={4} defaultValue={product.description || ''}
-                    className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all resize-none placeholder-gray-600"
+                    placeholder="Describe the product details..."
                   ></textarea>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Retail Price (¥)</label>
-                    <input
-                      name="retail_price" type="number" step="1" required defaultValue={product.retail_price ?? ''}
-                      className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all font-mono"
-                    />
-                  </div>
+                <div className={`grid grid-cols-1 md:grid-cols-${visibilityMode === 'wholesale' ? '2' : '3'} gap-6`}>
+                  {['retail', 'both'].includes(visibilityMode) && (
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Retail Price (¥)</label>
+                      <input
+                        name="retail_price" type="number" step="1" required={['retail', 'both'].includes(visibilityMode)} defaultValue={product.retail_price ?? ''}
+                        className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all font-mono placeholder-gray-600"
+                        placeholder="0"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Stock Level</label>
                     <input
                       name="stock_count" type="number" required defaultValue={product.stock_count}
-                      className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all font-mono"
+                      className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all font-mono placeholder-gray-600"
+                      placeholder="0"
                     />
+                    <p className="text-[10px] text-gray-400 mt-1.5 uppercase tracking-wider">{getStockHelperText(unitType)}</p>
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Unit Type</label>
                     <input
-                      name="unit_type" type="text" list="unit-suggestions" defaultValue={product.unit_type}
-                      className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all"
+                      name="unit_type" type="text" list="unit-suggestions" value={unitType} onChange={(e) => setUnitType(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder-gray-600"
+                      placeholder="e.g., 500g, 1kg, bottle, pack"
                     />
                     <datalist id="unit-suggestions">
                       <option value="piece" />
@@ -242,33 +273,62 @@ export function EditProductForm({ product }: { product: Product }) {
               </div>
 
               <div className="mt-8 pt-8 border-t border-brand-border">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h4 className="text-sm uppercase tracking-widest font-bold text-brand-gold">Wholesale Settings</h4>
+                <div className="mb-6">
+                  <h4 className="text-sm uppercase tracking-widest font-bold text-brand-gold">Visibility Mode</h4>
+                  <p className="text-xs text-gray-500 mt-1 mb-4">Select how this product is distributed and priced.</p>
+                  
+                  {/* Hidden input to pass value easily to server action */}
+                  <input type="hidden" name="visibility_mode" value={visibilityMode} />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {(['retail', 'wholesale', 'both'] as const).map((mode) => (
+                      <label 
+                        key={mode} 
+                        className={`flex items-center justify-center py-3 px-4 rounded-xl border cursor-pointer transition-all ${
+                          visibilityMode === mode 
+                            ? 'bg-brand-gold/10 border-brand-gold text-brand-gold shadow-[0_0_10px_rgba(212,175,55,0.1)]' 
+                            : 'bg-brand-gray/30 border-brand-border text-gray-400 hover:border-brand-gold/50'
+                        }`}
+                      >
+                        <input 
+                          type="radio" 
+                          name="_ignore_visibility" 
+                          value={mode} 
+                          className="sr-only"
+                          checked={visibilityMode === mode}
+                          onChange={() => setVisibilityMode(mode)}
+                        />
+                        <span className="text-xs font-bold uppercase tracking-widest">
+                          {mode === 'retail' ? 'Retail Only' : mode === 'wholesale' ? 'Wholesale Only' : 'Both (B2C + B2B)'}
+                        </span>
+                      </label>
+                    ))}
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" name="is_wholesale" className="sr-only peer"
-                      checked={isWholesale} onChange={(e) => setIsWholesale(e.target.checked)}
-                    />
-                    <div className="w-11 h-6 bg-brand-gray rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-gold"></div>
-                  </label>
                 </div>
 
-                {isWholesale && (
+                {['wholesale', 'both'].includes(visibilityMode) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
                     <div>
                       <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Wholesale Price (¥)</label>
                       <input
-                        name="wholesale_price" type="number" step="1" required={isWholesale} defaultValue={product.wholesale_price || ''}
-                        className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray/50 text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all font-mono"
+                        name="wholesale_price"
+                        type="number"
+                        step="1"
+                        required={['wholesale', 'both'].includes(visibilityMode)}
+                        defaultValue={product.wholesale_price || ''}
+                        className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray/50 text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder-gray-600 font-mono"
+                        placeholder="0"
                       />
                     </div>
                     <div>
                       <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Minimum Order (MOQ)</label>
                       <input
-                        name="wholesale_moq" type="number" required={isWholesale} defaultValue={product.wholesale_moq || ''}
-                        className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray/50 text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all font-mono"
+                        name="wholesale_moq"
+                        type="number"
+                        defaultValue={product.wholesale_moq || 10}
+                        required={['wholesale', 'both'].includes(visibilityMode)}
+                        className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray/50 text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder-gray-600 font-mono"
+                        placeholder="10"
                       />
                     </div>
                   </div>
@@ -276,17 +336,29 @@ export function EditProductForm({ product }: { product: Product }) {
               </div>
 
               {state?.error && (
-                <div className="mt-6 p-4 rounded-lg bg-red-950/40 text-red-400 text-sm border border-red-900/50">
-                  {state.error}
+                <div className="mt-6 p-4 rounded-lg bg-red-950/40 text-red-400 text-sm border border-red-900/50 flex items-start">
+                  <svg className="w-5 h-5 mr-2 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>{state.error}</span>
                 </div>
               )}
 
               <div className="mt-8">
                 <button
                   type="submit" disabled={isSubmitting || isCompressing}
-                  className="w-full py-4 px-4 bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-bold uppercase tracking-[0.15em] text-sm rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.15)] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center group"
+                  className="w-full py-4 px-4 bg-brand-gold hover:bg-brand-gold-hover text-brand-black font-bold uppercase tracking-[0.15em] text-sm rounded-xl transition-all shadow-[0_0_20px_rgba(212,175,55,0.15)] hover:shadow-[0_0_25px_rgba(212,175,55,0.3)] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center group"
                 >
-                  {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : 'Save Changes'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-brand-black" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      Save Changes
+                    </>
+                  )}
                 </button>
               </div>
 
