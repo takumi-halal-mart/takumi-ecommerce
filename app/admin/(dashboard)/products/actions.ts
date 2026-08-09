@@ -14,6 +14,7 @@ export interface Product {
   retail_price: number | null
   is_wholesale: boolean
   wholesale_price: number | null
+  wholesale_moq: number | null
   unit_type: string
   category: string
   flavor_options: string[] | null

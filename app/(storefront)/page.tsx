@@ -43,7 +43,7 @@ export default async function StorefrontPage() {
 
       {/* SECTION 2: INTERACTIVE CATEGORY SCROLLER */}
       {categories.length > 0 && (
-        <section className="px-4 mt-[-40px] relative z-20">
+        <section className="px-4 mt-2 md:mt-4 relative z-20">
           <div className="max-w-7xl mx-auto bg-white p-6 rounded-2xl shadow-sm overflow-hidden border border-gray-100">
             <h2 className="text-center text-black tracking-widest uppercase mb-6 font-bold text-lg md:text-xl">
               Shop by Category
