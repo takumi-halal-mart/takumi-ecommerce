@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ShoppingBag, ShoppingCart, Users, Settings, LogOut, Menu, X, Megaphone, Tag } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, ShoppingCart, Users, Settings, LogOut, Menu, X, Megaphone, Tag, ExternalLink } from 'lucide-react'
 import { logout } from '@/app/admin/(dashboard)/actions'
 
 interface SidebarProps {
@@ -96,6 +96,16 @@ export function Sidebar({ userEmail }: SidebarProps) {
         </nav>
 
         <div className="p-4 border-t border-brand-border bg-brand-dark shrink-0">
+          <Link
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center w-full px-4 py-2.5 mb-5 text-gray-300 hover:bg-brand-gray hover:text-white rounded-lg font-medium transition-colors border border-transparent hover:border-gray-700"
+          >
+            <ExternalLink className="h-5 w-5 mr-3" />
+            Return to Website
+          </Link>
+
           <div className="flex items-center px-4 mb-5">
             <div className="w-9 h-9 rounded-full bg-brand-gold/20 border border-brand-gold/50 text-brand-gold flex items-center justify-center font-bold text-sm shadow-[0_0_10px_rgba(212,175,55,0.2)]">
               {userEmail.charAt(0).toUpperCase()}

@@ -79,7 +79,8 @@ export async function placeOrder(formData: FormData, cartItems: CartItem[], tota
       order_id: orderId,
       product_id: item.product.id.replace('_bulk', ''),
       quantity: item.quantity,
-      price_at_purchase: item.product.retail_price || 0
+      price_at_purchase: item.product.retail_price || 0,
+      selected_flavor: item.product.selected_flavor || null
     }))
 
     // Insert into order_items table

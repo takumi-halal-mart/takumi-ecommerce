@@ -66,6 +66,7 @@ export async function POST(req: Request) {
               product_id: product?.metadata?.productId,
               quantity: item.quantity,
               price_at_purchase: item.price?.unit_amount || 0,
+              selected_flavor: product?.metadata?.selectedFlavor || null,
             };
           })
           .filter(item => item.product_id); // Safely filter out things like delivery fees with no product_id

@@ -232,6 +232,18 @@ export function EditProductForm({ product, initialCategories }: { product: Produ
                   ></textarea>
                 </div>
 
+                <div>
+                  <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Flavors / Varieties (Optional)</label>
+                  <input
+                    name="flavor_options"
+                    type="text"
+                    defaultValue={product.flavor_options?.join(', ') || ''}
+                    className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all placeholder-gray-600"
+                    placeholder="e.g. Orange, Apple, Mango (comma separated)"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-1.5 uppercase tracking-wider">Leave blank if there are no specific flavors or varieties.</p>
+                </div>
+
                 <div className={`grid grid-cols-1 md:grid-cols-${visibilityMode === 'wholesale' ? '2' : '3'} gap-6`}>
                   {['retail', 'both'].includes(visibilityMode) && (
                     <div>

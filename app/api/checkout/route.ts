@@ -40,24 +40,28 @@ export async function POST(req: Request) {
       const isExplicitBulk = item.productId.endsWith('_bulk');
       const cleanId = item.productId.replace('_bulk', '');
       const product = products.find((p) => p.id === cleanId);
-      
+
       if (!product) continue;
 
       let priceToUse = product.retail_price;
       let displayName = product.name;
       let finalIsBulk = false;
 
+      if (item.selectedFlavor) {
+        displayName = `${displayName} (${item.selectedFlavor})`;
+      }
+
       if (isExplicitBulk) {
         priceToUse = product.wholesale_price;
-        displayName = `${product.name} (Wholesale)`;
+        displayName = `${displayName} (Wholesale)`;
         finalIsBulk = true;
       } else if (product.is_wholesale && product.wholesale_moq && item.quantity >= product.wholesale_moq) {
         // Smart dynamic wholesale fallback! 
         priceToUse = product.wholesale_price;
-        displayName = `${product.name} (Wholesale Auto-Applied)`;
+        displayName = `${displayName} (Wholesale Auto-Applied)`;
         finalIsBulk = true;
       }
-      
+
       if (!priceToUse) continue;
 
       subtotal += priceToUse * item.quantity;
@@ -71,6 +75,7 @@ export async function POST(req: Request) {
             metadata: {
               productId: cleanId, // Pass actual DB UUID to webhook
               isBulk: finalIsBulk ? 'true' : 'false',
+              selectedFlavor: item.selectedFlavor || '',
             },
           },
           unit_amount: priceToUse, // Exact integer amount
@@ -91,7 +96,7 @@ export async function POST(req: Request) {
       if (!couponError && coupon && coupon.is_active && subtotal >= coupon.min_spend) {
         // Verify usage limits
         const underLimit = coupon.usage_limit ? (coupon.times_used || 0) < coupon.usage_limit : true;
-        
+
         if (underLimit) {
           if (coupon.discount_type === 'percentage') {
             discountAmount = Math.floor(subtotal * (coupon.discount_value / 100));
@@ -119,7 +124,7 @@ export async function POST(req: Request) {
         .ilike('city_name', deliveryCity.trim())
         .eq('is_active', true)
         .maybeSingle();
-        
+
       if (zoneData) {
         deliveryFee = zoneData.delivery_fee;
         isSpecificZone = true; // Use the zone's specific fee, ignoring the free shipping threshold

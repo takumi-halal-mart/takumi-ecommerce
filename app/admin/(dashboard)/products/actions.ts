@@ -14,9 +14,9 @@ export interface Product {
   retail_price: number | null
   is_wholesale: boolean
   wholesale_price: number | null
-  wholesale_moq: number
   unit_type: string
   category: string
+  flavor_options: string[] | null
 }
 
 /**
@@ -45,6 +45,9 @@ export async function createProduct(prevState: any, formData: FormData) {
     const wholesale_price = wholesale_priceRaw && is_wholesale ? parseFloat(wholesale_priceRaw as string) : null
     
     const wholesale_moq = parseInt(formData.get('wholesale_moq') as string || '10', 10)
+
+    const flavorsRaw = formData.get('flavor_options') as string || ''
+    const flavor_options = flavorsRaw.split(',').map(s => s.trim()).filter(Boolean)
 
     // Basic validation
     if (!name || (is_retail && retail_price === null) || (is_wholesale && wholesale_price === null)) {
@@ -87,6 +90,7 @@ export async function createProduct(prevState: any, formData: FormData) {
       wholesale_moq,
       unit_type,
       category,
+      flavor_options,
       image_url
     })
 
@@ -199,6 +203,9 @@ export async function updateProduct(productId: string, prevState: any, formData:
     
     const wholesale_moq = parseInt(formData.get('wholesale_moq') as string || '10', 10)
 
+    const flavorsRaw = formData.get('flavor_options') as string || ''
+    const flavor_options = flavorsRaw.split(',').map(s => s.trim()).filter(Boolean)
+
     if (!name || (is_retail && retail_price === null) || (is_wholesale && wholesale_price === null)) {
       return { error: 'Name and appropriate prices for the selected mode are required.' }
     }
@@ -213,7 +220,8 @@ export async function updateProduct(productId: string, prevState: any, formData:
       wholesale_price,
       wholesale_moq,
       unit_type,
-      category
+      category,
+      flavor_options
     }
 
     // Handle Optional Image Upload (only updates image if a new one is provided)

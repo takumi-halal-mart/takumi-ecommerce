@@ -31,6 +31,7 @@ export interface StorefrontProduct {
   unit_type: string | null
   image_url: string | null
   category: string
+  flavor_options: string[] | null
   created_at: string
 }
 

@@ -16,6 +16,9 @@ export function ProductActions({ product }: ProductActionsProps) {
   const defaultQuantity = isWholesaleMode ? (product.wholesale_moq || 1) : 1
   const [quantity, setQuantity] = useState<number | string>(defaultQuantity)
   const [added, setAdded] = useState(false)
+  const [selectedFlavor, setSelectedFlavor] = useState<string | null>(
+    product.flavor_options && product.flavor_options.length > 0 ? product.flavor_options[0] : null
+  )
 
   // When switching modes, adjust quantity bounds
   useEffect(() => {
@@ -40,11 +43,13 @@ export function ProductActions({ product }: ProductActionsProps) {
         retail_price: product.wholesale_price,
         image_url: product.image_url,
         unit_type: product.unit_type,
-        wholesale_moq: product.wholesale_moq
+        wholesale_moq: product.wholesale_moq,
+        selected_flavor: selectedFlavor
       }
       for (let i = 0; i < finalQuantity; i++) addToCart(cartProduct)
     } else {
-      for (let i = 0; i < finalQuantity; i++) addToCart(product)
+      const cartProduct = { ...product, selected_flavor: selectedFlavor }
+      for (let i = 0; i < finalQuantity; i++) addToCart(cartProduct)
     }
     
     setQuantity(finalQuantity)
@@ -62,6 +67,30 @@ export function ProductActions({ product }: ProductActionsProps) {
   return (
     <div className="flex flex-col gap-6">
       
+      {/* Flavor Selection Dropdown */}
+      {product.flavor_options && product.flavor_options.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-bold uppercase tracking-widest text-gray-500">Select Flavor / Variety</label>
+          <select
+            value={selectedFlavor || ''}
+            onChange={(e) => setSelectedFlavor(e.target.value)}
+            className="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-black font-bold uppercase tracking-wider outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent transition-all cursor-pointer appearance-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 1rem center',
+              backgroundSize: '1.2em'
+            }}
+          >
+            {product.flavor_options.map((flavor, index) => (
+              <option key={index} value={flavor}>
+                {flavor}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Wholesale Upsell Engine */}
       {product.is_wholesale && product.wholesale_price && (
         <div className={`p-5 rounded-2xl border-2 transition-all duration-300 cursor-pointer ${isWholesaleMode ? 'border-brand-dark bg-brand-dark text-white shadow-xl scale-[1.02]' : 'border-gray-200 bg-white hover:border-gray-300'} `} onClick={() => setIsWholesaleMode(!isWholesaleMode)}>

@@ -19,13 +19,14 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
   const handleBlur = () => {
     const val = typeof localQty === 'string' ? parseInt(localQty) : localQty;
     const min = item.product.wholesale_moq || 1;
+    const identifier = item.cartItemId || item.product.id;
     if (isNaN(val) || val === 0) {
-      removeFromCart(item.product.id);
+      removeFromCart(identifier);
     } else if (val < min) {
-      updateQuantity(item.product.id, min);
+      updateQuantity(identifier, min);
       setLocalQty(min);
     } else {
-      updateQuantity(item.product.id, val);
+      updateQuantity(identifier, val);
     }
   }
 
@@ -47,7 +48,14 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
       </div>
       
       <div className="flex-grow text-center sm:text-left w-full">
-        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">{item.product.name}</h3>
+        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">
+          {item.product.name}
+          {item.product.selected_flavor && (
+            <span className="ml-2 text-sm text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full inline-block">
+              {item.product.selected_flavor}
+            </span>
+          )}
+        </h3>
         <div className="flex items-center flex-wrap gap-2 mb-3">
           <div className="text-sm text-gray-500 font-medium">
             ¥{currentPrice?.toLocaleString()} / {item.product.unit_type || 'piece'}
@@ -65,7 +73,7 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
               onClick={() => {
                 const newVal = Math.max(item.product.wholesale_moq || 1, numericQty - 1);
                 setLocalQty(newVal);
-                updateQuantity(item.product.id, newVal);
+                updateQuantity(item.cartItemId || item.product.id, newVal);
               }}
               disabled={numericQty <= (item.product.wholesale_moq || 1)}
               className={`w-8 h-8 flex items-center justify-center rounded-l-full transition-colors ${numericQty <= (item.product.wholesale_moq || 1) ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-black'}`}
@@ -90,7 +98,7 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
               onClick={() => {
                 const newVal = numericQty + 1;
                 setLocalQty(newVal);
-                updateQuantity(item.product.id, newVal);
+                updateQuantity(item.cartItemId || item.product.id, newVal);
               }}
               className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-black transition-colors rounded-r-full"
               aria-label="Increase quantity"
@@ -100,7 +108,7 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
           </div>
           
           <button 
-            onClick={() => removeFromCart(item.product.id)}
+            onClick={() => removeFromCart(item.cartItemId || item.product.id)}
             className="text-gray-400 hover:text-red-500 transition-colors p-2"
             aria-label="Remove item"
           >
@@ -245,7 +253,8 @@ export default function CartPage() {
       try {
         const stripeItems = items.map(item => ({
           productId: item.product.id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          selectedFlavor: item.product.selected_flavor || null
         }));
         
         const response = await fetch('/api/checkout', {
@@ -328,7 +337,8 @@ export default function CartPage() {
         items.forEach(item => {
           const isAutoWholesale = item.product.is_wholesale && item.product.wholesale_moq && item.quantity >= item.product.wholesale_moq;
           const currentPrice = isAutoWholesale ? item.product.wholesale_price : item.product.retail_price;
-          message += `- ${item.quantity}x ${item.product.name} ${isAutoWholesale ? '(Wholesale)' : ''} (¥${(item.quantity * (currentPrice || 0)).toLocaleString('ja-JP')})\n`
+          const flavorText = item.product.selected_flavor ? ` (${item.product.selected_flavor})` : '';
+          message += `- ${item.quantity}x ${item.product.name}${flavorText} ${isAutoWholesale ? '(Wholesale)' : ''} (¥${(item.quantity * (currentPrice || 0)).toLocaleString('ja-JP')})\n`
         })
         
         message += `\n*Subtotal:* ¥${subtotal.toLocaleString('ja-JP')}\n`
@@ -409,7 +419,7 @@ export default function CartPage() {
             <div className="lg:col-span-7 space-y-4">
               {items.map((item) => (
                 <CartItemRow 
-                  key={item.product.id} 
+                  key={item.cartItemId || item.product.id} 
                   item={item} 
                   updateQuantity={updateQuantity} 
                   removeFromCart={removeFromCart} 

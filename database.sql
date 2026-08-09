@@ -331,12 +331,14 @@ BEGIN
       order_id,
       product_id,
       quantity,
-      price_at_purchase
+      price_at_purchase,
+      selected_flavor
     ) VALUES (
       v_order_id,
       (v_item->>'product_id')::UUID,
       (v_item->>'quantity')::INTEGER,
-      (v_item->>'price_at_purchase')::DECIMAL
+      (v_item->>'price_at_purchase')::DECIMAL,
+      v_item->>'selected_flavor'
     );
 
     -- Decrement Product Stock
@@ -379,3 +381,94 @@ INSERT INTO delivery_zones (city_name, delivery_fee) VALUES
 ('Togane / Tōgane (東金市)', 0),
 ('Mobara (茂原市)', 0),
 ('Tomisato (富里市)', 0);
+
+-- Product Flavors & Varieties Support
+ALTER TABLE products ADD COLUMN IF NOT EXISTS flavor_options TEXT[] DEFAULT '{}';
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS selected_flavor TEXT;
+
+
+-- 1. Add the new flavor columns to your tables
+ALTER TABLE products ADD COLUMN IF NOT EXISTS flavor_options TEXT[] DEFAULT '{}';
+ALTER TABLE order_items ADD COLUMN IF NOT EXISTS selected_flavor TEXT;
+
+-- 2. Update the Stripe Webhook Stored Procedure to handle flavors
+CREATE OR REPLACE FUNCTION process_stripe_order(
+  p_customer_name TEXT,
+  p_customer_phone TEXT,
+  p_delivery_address TEXT,
+  p_total_amount DECIMAL,
+  p_payment_intent_id TEXT,
+  p_coupon_id UUID,
+  p_items JSONB -- Array of {product_id: uuid, quantity: int, price_at_purchase: decimal, selected_flavor: text}
+) RETURNS UUID AS $$
+DECLARE
+  v_order_id UUID;
+  v_item JSONB;
+BEGIN
+  -- 1. IDEMPOTENCY CHECK: Return existing order ID if already processed
+  SELECT id INTO v_order_id 
+  FROM orders 
+  WHERE stripe_payment_intent_id = p_payment_intent_id;
+  
+  IF v_order_id IS NOT NULL THEN
+    RETURN v_order_id;
+  END IF;
+
+  -- 2. Create the Order
+  INSERT INTO orders (
+    customer_name,
+    customer_phone,
+    delivery_address,
+    total_amount,
+    payment_method,
+    payment_status,
+    status,
+    stripe_payment_intent_id
+  ) VALUES (
+    p_customer_name,
+    p_customer_phone,
+    p_delivery_address,
+    p_total_amount,
+    'Stripe',
+    'Paid',
+    'Pending',
+    p_payment_intent_id
+  ) RETURNING id INTO v_order_id;
+
+  -- 3. Loop through items: Insert Order Items & Decrement Stock
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    INSERT INTO order_items (
+      order_id,
+      product_id,
+      quantity,
+      price_at_purchase,
+      selected_flavor
+    ) VALUES (
+      v_order_id,
+      (v_item->>'product_id')::UUID,
+      (v_item->>'quantity')::INTEGER,
+      (v_item->>'price_at_purchase')::DECIMAL,
+      v_item->>'selected_flavor'
+    );
+
+    -- Decrement Product Stock
+    UPDATE products
+    SET stock_count = GREATEST(0, stock_count - (v_item->>'quantity')::INTEGER)
+    WHERE id = (v_item->>'product_id')::UUID;
+  END LOOP;
+
+  -- 4. Handle Coupon Usage
+  IF p_coupon_id IS NOT NULL THEN
+    INSERT INTO coupon_usages (coupon_id, customer_phone)
+    VALUES (p_coupon_id, p_customer_phone)
+    ON CONFLICT DO NOTHING;
+
+    UPDATE coupons
+    SET times_used = times_used + 1
+    WHERE id = p_coupon_id;
+  END IF;
+
+  RETURN v_order_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

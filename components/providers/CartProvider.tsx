@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
 export interface CartItem {
+  cartItemId: string
   product: {
     id: string
     name: string
@@ -12,6 +13,7 @@ export interface CartItem {
     wholesale_moq?: number | null
     wholesale_price?: number | null
     is_wholesale?: boolean
+    selected_flavor?: string | null
   }
   quantity: number
 }
@@ -19,8 +21,8 @@ export interface CartItem {
 interface CartContextType {
   items: CartItem[]
   addToCart: (product: CartItem['product']) => void
-  removeFromCart: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  removeFromCart: (cartItemId: string) => void
+  updateQuantity: (cartItemId: string, quantity: number) => void
   clearCart: () => void
   cartCount: number
 }
@@ -53,31 +55,45 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (product: CartItem['product']) => {
     setItems(current => {
-      const existingItem = current.find(item => item.product.id === product.id)
+      const newCartItemId = `${product.id}-${product.selected_flavor || 'none'}`
+      
+      // Look for existing item using either the new cartItemId or fallback to legacy id matching
+      const existingItem = current.find(item => 
+        (item.cartItemId && item.cartItemId === newCartItemId) || 
+        (!item.cartItemId && item.product.id === product.id && item.product.selected_flavor === product.selected_flavor)
+      )
+
       if (existingItem) {
         return current.map(item =>
-          item.product.id === product.id
+          ((item.cartItemId && item.cartItemId === newCartItemId) || 
+           (!item.cartItemId && item.product.id === product.id && item.product.selected_flavor === product.selected_flavor))
             ? { ...item, quantity: item.quantity + 1 }
             : item
         )
       }
-      return [...current, { product, quantity: 1 }]
+      return [...current, { cartItemId: newCartItemId, product, quantity: 1 }]
     })
   }
 
-  const removeFromCart = (productId: string) => {
-    setItems(current => current.filter(item => item.product.id !== productId))
+  const removeFromCart = (cartItemId: string) => {
+    // If they pass an old productId without flavor, it'll still try to match it, or fallback.
+    // For backwards compat with old saved carts, check if item.cartItemId matches, OR if item.product.id matches (if cartItemId is missing)
+    setItems(current => current.filter(item => {
+      if (item.cartItemId) return item.cartItemId !== cartItemId
+      return item.product.id !== cartItemId
+    }))
   }
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId)
+      removeFromCart(cartItemId)
       return
     }
     setItems(current =>
-      current.map(item =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
+      current.map(item => {
+        const match = item.cartItemId ? item.cartItemId === cartItemId : item.product.id === cartItemId;
+        return match ? { ...item, quantity } : item
+      })
     )
   }
 

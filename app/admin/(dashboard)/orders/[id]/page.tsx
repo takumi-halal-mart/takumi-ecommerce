@@ -195,6 +195,11 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                       <div className="text-base font-semibold text-white mb-1 group-hover:text-brand-gold transition-colors">
                         {item.products?.name || 'Unknown Item'}
+                        {item.selected_flavor && (
+                          <span className="ml-2 text-xs text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full inline-block align-middle mb-1">
+                            {item.selected_flavor}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 text-sm text-gray-400">
                         <span className="bg-brand-dark px-2 py-0.5 rounded text-brand-gold font-bold border border-brand-border/50">

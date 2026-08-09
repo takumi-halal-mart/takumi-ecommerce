@@ -10,6 +10,7 @@ export interface OrderItem {
   product_id: string | null
   quantity: number
   price_at_purchase: number
+  selected_flavor: string | null
   // Optional relations if you join with products
   products?: {
     name: string
@@ -48,6 +49,7 @@ export async function getOrders(): Promise<{ data: Order[] | null; error: string
           id,
           quantity,
           price_at_purchase,
+          selected_flavor,
           products (
             name,
             image_url
@@ -83,6 +85,7 @@ export async function getOrderById(orderId: string): Promise<{ data: Order | nul
           id,
           quantity,
           price_at_purchase,
+          selected_flavor,
           products (
             name,
             image_url
