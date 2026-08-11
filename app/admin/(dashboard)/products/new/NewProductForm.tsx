@@ -266,6 +266,19 @@ export function NewProductForm({ initialCategories }: { initialCategories: Categ
                 </div>
 
                 <div>
+                  <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Allowed Payment Method</label>
+                  <select
+                    name="allowed_payment_method"
+                    defaultValue="both"
+                    className="w-full px-4 py-3 rounded-lg border border-brand-border bg-brand-gray text-white focus:ring-1 focus:ring-brand-gold focus:border-brand-gold outline-none transition-all"
+                  >
+                    <option value="both">Both (Stripe & WhatsApp)</option>
+                    <option value="stripe_only">Card Payment Only (Stripe)</option>
+                    <option value="whatsapp_only">Manual Order Only (WhatsApp)</option>
+                  </select>
+                </div>
+
+                <div>
                   <label className="block text-xs uppercase tracking-widest font-semibold text-brand-gold mb-2">Flavors / Varieties (Optional)</label>
                   <input
                     name="flavor_options"

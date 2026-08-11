@@ -11,6 +11,42 @@ export const metadata = {
 export default async function OrdersPage() {
   const { data: orders, error } = await getOrders()
 
+  // Group split orders together
+  const groupedOrders: any[] = [];
+  if (orders) {
+    orders.forEach(order => {
+      // Find an existing group (same phone, within 30 minutes)
+      const existingGroup = groupedOrders.find(g => 
+        g.customer_phone === order.customer_phone &&
+        Math.abs(new Date(g.created_at).getTime() - new Date(order.created_at).getTime()) < 1000 * 60 * 30
+      );
+
+      if (existingGroup) {
+        existingGroup.ids.push(order.id);
+        existingGroup.total_amount += order.total_amount;
+        if (!existingGroup.payment_methods.includes(order.payment_method)) {
+          existingGroup.payment_methods.push(order.payment_method);
+        }
+        existingGroup.order_items = [...existingGroup.order_items, ...(order.order_items || [])];
+        
+        // Use earliest created_at
+        if (new Date(order.created_at) < new Date(existingGroup.created_at)) {
+          existingGroup.created_at = order.created_at;
+        }
+      } else {
+        groupedOrders.push({
+          ...order,
+          ids: [order.id],
+          payment_methods: [order.payment_method],
+          order_items: [...(order.order_items || [])]
+        });
+      }
+    });
+    
+    // Sort grouped orders by created_at descending
+    groupedOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
       
@@ -45,7 +81,7 @@ export default async function OrdersPage() {
       <div className="bg-brand-dark rounded-2xl border border-brand-border shadow-lg overflow-hidden relative">
         
         {/* Empty State */}
-        {!orders || orders.length === 0 ? (
+        {!groupedOrders || groupedOrders.length === 0 ? (
           <div className="p-12 flex flex-col items-center justify-center text-center py-32 relative overflow-hidden">
             <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
               <BoxSelect className="w-96 h-96 text-white" />
@@ -73,10 +109,10 @@ export default async function OrdersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-border/50">
-                {orders.map((order) => {
+                {groupedOrders.map((order) => {
                   
                   // Native Server Action Binding for deletions
-                  const deleteAction = deleteOrder.bind(null, order.id)
+                  const deleteAction = deleteOrder.bind(null, order.ids)
                   
                   // Date Formatting
                   const orderDate = new Date(order.created_at)
@@ -118,7 +154,7 @@ export default async function OrdersPage() {
                           
                           {order.order_items && order.order_items.length > 0 && (
                             <div className="flex -space-x-2 overflow-hidden">
-                              {order.order_items.slice(0, 3).map((item, i) => (
+                              {order.order_items.slice(0, 3).map((item: any, i: number) => (
                                 <div key={item.id} className="inline-block h-6 w-6 rounded-full ring-2 ring-brand-dark bg-brand-gray overflow-hidden relative">
                                   {item.products?.image_url ? (
                                     <Image src={item.products.image_url} alt="Item" fill className="object-cover" unoptimized />
@@ -140,20 +176,22 @@ export default async function OrdersPage() {
                       {/* 4. Financials & Payment Method */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-white font-mono font-medium">¥{order.total_amount.toLocaleString('ja-JP')}</div>
-                        <div className="mt-1.5">
-                          {order.payment_method === 'Stripe' ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-blue-950/30 text-blue-400 border border-blue-900/50">
-                              <CreditCard className="w-3 h-3 mr-1" /> Stripe
-                            </span>
-                          ) : order.payment_method === 'WhatsApp' ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-green-950/30 text-green-400 border border-green-900/50">
-                              <Phone className="w-3 h-3 mr-1" /> WhatsApp
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
-                              <BoxSelect className="w-3 h-3 mr-1" /> Wholesale
-                            </span>
-                          )}
+                        <div className="mt-1.5 flex flex-wrap gap-1 max-w-[150px]">
+                          {order.payment_methods.map((pm: string) => (
+                            pm === 'Stripe' ? (
+                              <span key={pm} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-blue-950/30 text-blue-400 border border-blue-900/50">
+                                <CreditCard className="w-3 h-3 mr-1" /> Stripe
+                              </span>
+                            ) : pm === 'WhatsApp' ? (
+                              <span key={pm} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-green-950/30 text-green-400 border border-green-900/50">
+                                <Phone className="w-3 h-3 mr-1" /> WhatsApp
+                              </span>
+                            ) : (
+                              <span key={pm} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+                                <BoxSelect className="w-3 h-3 mr-1" /> Wholesale
+                              </span>
+                            )
+                          ))}
                         </div>
                       </td>
 
@@ -162,7 +200,7 @@ export default async function OrdersPage() {
                         <div className="flex items-center justify-end space-x-4">
                           
                           {/* Client Component Dropdown for Fulfillment Status */}
-                          <StatusDropdown orderId={order.id} currentStatus={order.status} />
+                          <StatusDropdown orderIds={order.ids} currentStatus={order.status} />
 
                           <div className="flex items-center lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 gap-2 mt-4 lg:mt-0">
                             {/* View Details Link */}

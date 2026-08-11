@@ -18,6 +18,7 @@ export interface Product {
   unit_type: string
   category: string
   flavor_options: string[] | null
+  allowed_payment_method: 'both' | 'stripe_only' | 'whatsapp_only'
 }
 
 /**
@@ -49,6 +50,7 @@ export async function createProduct(prevState: any, formData: FormData) {
 
     const flavorsRaw = formData.get('flavor_options') as string || ''
     const flavor_options = flavorsRaw.split(',').map(s => s.trim()).filter(Boolean)
+    const allowed_payment_method = (formData.get('allowed_payment_method') as string) || 'both'
 
     // Basic validation
     if (!name || (is_retail && retail_price === null) || (is_wholesale && wholesale_price === null)) {
@@ -92,6 +94,7 @@ export async function createProduct(prevState: any, formData: FormData) {
       unit_type,
       category,
       flavor_options,
+      allowed_payment_method,
       image_url
     })
 
@@ -206,6 +209,7 @@ export async function updateProduct(productId: string, prevState: any, formData:
 
     const flavorsRaw = formData.get('flavor_options') as string || ''
     const flavor_options = flavorsRaw.split(',').map(s => s.trim()).filter(Boolean)
+    const allowed_payment_method = (formData.get('allowed_payment_method') as string) || 'both'
 
     if (!name || (is_retail && retail_price === null) || (is_wholesale && wholesale_price === null)) {
       return { error: 'Name and appropriate prices for the selected mode are required.' }
@@ -222,7 +226,8 @@ export async function updateProduct(productId: string, prevState: any, formData:
       wholesale_moq,
       unit_type,
       category,
-      flavor_options
+      flavor_options,
+      allowed_payment_method
     }
 
     // Handle Optional Image Upload (only updates image if a new one is provided)

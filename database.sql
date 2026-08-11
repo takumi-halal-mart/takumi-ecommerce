@@ -472,3 +472,7 @@ BEGIN
   RETURN v_order_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+-- Add payment method column
+ALTER TABLE products ADD COLUMN IF NOT EXISTS allowed_payment_method TEXT DEFAULT 'both' CHECK (allowed_payment_method IN ('both', 'stripe_only', 'whatsapp_only'));

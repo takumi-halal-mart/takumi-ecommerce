@@ -110,14 +110,14 @@ export async function getOrderById(orderId: string): Promise<{ data: Order | nul
 /**
  * Updates the fulfillment status of a specific order.
  */
-export async function updateOrderStatus(orderId: string, newStatus: 'Pending' | 'Shipped' | 'Completed') {
+export async function updateOrderStatus(orderIds: string[], newStatus: 'Pending' | 'Shipped' | 'Completed') {
   try {
     const supabase = await createClient()
 
     const { error } = await supabase
       .from('orders')
       .update({ status: newStatus })
-      .eq('id', orderId)
+      .in('id', orderIds)
 
     if (error) {
       console.error('Update order status error:', error)
@@ -138,14 +138,14 @@ export async function updateOrderStatus(orderId: string, newStatus: 'Pending' | 
  * Note: Because 'order_items' uses 'ON DELETE CASCADE' in SQL,
  * deleting the parent order will automatically wipe the nested items.
  */
-export async function deleteOrder(orderId: string) {
+export async function deleteOrder(orderIds: string[]) {
   try {
     const supabase = await createClient()
 
     const { error } = await supabase
       .from('orders')
       .delete()
-      .eq('id', orderId)
+      .in('id', orderIds)
 
     if (error) {
       console.error('Database delete order error:', error)

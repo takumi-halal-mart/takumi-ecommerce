@@ -5,11 +5,11 @@ import { updateOrderStatus } from './actions'
 import { Loader2 } from 'lucide-react'
 
 interface StatusDropdownProps {
-  orderId: string
+  orderIds: string[]
   currentStatus: 'Pending' | 'Shipped' | 'Completed'
 }
 
-export function StatusDropdown({ orderId, currentStatus }: StatusDropdownProps) {
+export function StatusDropdown({ orderIds, currentStatus }: StatusDropdownProps) {
   const [isPending, startTransition] = useTransition()
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -17,7 +17,7 @@ export function StatusDropdown({ orderId, currentStatus }: StatusDropdownProps) 
     
     // Smoothly fire the server action in the background
     startTransition(() => {
-      updateOrderStatus(orderId, newStatus)
+      updateOrderStatus(orderIds, newStatus)
     })
   }
 

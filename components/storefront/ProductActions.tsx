@@ -44,11 +44,14 @@ export function ProductActions({ product }: ProductActionsProps) {
         image_url: product.image_url,
         unit_type: product.unit_type,
         wholesale_moq: product.wholesale_moq,
-        selected_flavor: selectedFlavor
+        selected_flavor: selectedFlavor,
+        flavor_options: product.flavor_options,
+        is_wholesale: true,
+        allowed_payment_method: product.allowed_payment_method
       }
       for (let i = 0; i < finalQuantity; i++) addToCart(cartProduct)
     } else {
-      const cartProduct = { ...product, selected_flavor: selectedFlavor }
+      const cartProduct = { ...product, selected_flavor: selectedFlavor, flavor_options: product.flavor_options }
       for (let i = 0; i < finalQuantity; i++) addToCart(cartProduct)
     }
     

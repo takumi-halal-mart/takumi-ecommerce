@@ -32,6 +32,7 @@ export interface StorefrontProduct {
   image_url: string | null
   category: string
   flavor_options: string[] | null
+  allowed_payment_method?: 'both' | 'stripe_only' | 'whatsapp_only'
   created_at: string
 }
 

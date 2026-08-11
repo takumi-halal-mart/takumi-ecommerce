@@ -4,12 +4,12 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, CheckCircle, Truck, Tag, X, CreditCard, MessageCircle } from 'lucide-react'
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, CheckCircle, Truck, Tag, X, CreditCard, MessageCircle, AlertCircle, ChevronDown } from 'lucide-react'
 import { useCart } from '@/components/providers/CartProvider'
 import { getStoreSettings, StoreSettings, validateCouponCode, getDeliveryZones } from '@/app/actions/storefront'
 import { placeOrder } from '@/app/actions/orders'
 
-function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
+function CartItemRow({ item, updateQuantity, updateFlavor, removeFromCart }: any) {
   const [localQty, setLocalQty] = useState<string | number>(item.quantity)
 
   React.useEffect(() => {
@@ -48,12 +48,30 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
       </div>
       
       <div className="flex-grow text-center sm:text-left w-full">
-        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1">
+        <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2 flex items-center justify-center sm:justify-start flex-wrap gap-2">
           {item.product.name}
-          {item.product.selected_flavor && (
-            <span className="ml-2 text-sm text-brand-gold bg-brand-gold/10 px-2 py-0.5 rounded-full inline-block">
-              {item.product.selected_flavor}
-            </span>
+          
+          {item.product.flavor_options && item.product.flavor_options.length > 0 ? (
+            <div className="relative inline-block">
+              <select
+                value={item.product.selected_flavor || item.product.flavor_options[0]}
+                onChange={(e) => updateFlavor(item.cartItemId, e.target.value)}
+                className="appearance-none text-xs font-bold bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 px-3 py-1 pr-7 rounded-full outline-none focus:ring-2 focus:ring-[#D4AF37] cursor-pointer transition-colors hover:bg-[#D4AF37]/20"
+              >
+                {item.product.flavor_options.map((flavor: string) => (
+                  <option key={flavor} value={flavor} className="bg-white text-black">
+                    {flavor}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-3 h-3 text-[#D4AF37] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          ) : (
+            item.product.selected_flavor && item.product.selected_flavor !== 'none' && (
+              <span className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/10 border border-[#D4AF37]/30 px-3 py-1 rounded-full inline-block">
+                {item.product.selected_flavor}
+              </span>
+            )
           )}
         </h3>
         <div className="flex items-center flex-wrap gap-2 mb-3">
@@ -63,6 +81,16 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
           {isAutoWholesale && (
             <div className="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-widest rounded-sm border border-green-200">
               Wholesale Discount Applied
+            </div>
+          )}
+          {item.product.allowed_payment_method === 'whatsapp_only' && (
+            <div className="px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-widest rounded-sm border border-green-200 flex items-center gap-1">
+              <MessageCircle className="w-3 h-3" /> WhatsApp Only
+            </div>
+          )}
+          {item.product.allowed_payment_method === 'stripe_only' && (
+            <div className="px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-widest rounded-sm border border-blue-200 flex items-center gap-1">
+              <CreditCard className="w-3 h-3" /> Card Only
             </div>
           )}
         </div>
@@ -125,9 +153,8 @@ function CartItemRow({ item, updateQuantity, removeFromCart }: any) {
 }
 
 export default function CartPage() {
-  const { items, removeFromCart, updateQuantity, clearCart, cartCount } = useCart()
+  const { items, removeFromCart, updateQuantity, updateFlavor, clearCart, cartCount } = useCart()
   const router = useRouter()
-  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -135,9 +162,27 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState<'WhatsApp' | 'Stripe'>('WhatsApp')
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false)
   
+  // Form State for UX
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [hasPaidDeliveryFee, setHasPaidDeliveryFee] = useState(false)
+
   // Delivery Zones
   const [deliveryZones, setDeliveryZones] = useState<any[]>([])
   const [deliveryCity, setDeliveryCity] = useState('')
+  const [showCityDropdown, setShowCityDropdown] = useState(false)
+  const cityInputRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (cityInputRef.current && !cityInputRef.current.contains(event.target as Node)) {
+        setShowCityDropdown(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   // Coupon State
   const [couponCode, setCouponCode] = useState('')
@@ -165,7 +210,32 @@ export default function CartPage() {
       }
     }
     fetchSettingsAndZones()
+
+    // Restore form data if returning from Stripe Split Checkout
+    try {
+      const savedForm = sessionStorage.getItem('takumi_checkout_form')
+      if (savedForm) {
+        const parsed = JSON.parse(savedForm)
+        if (parsed.customerName) setCustomerName(parsed.customerName)
+        if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone)
+        if (parsed.deliveryAddress) setDeliveryAddress(parsed.deliveryAddress)
+        if (parsed.deliveryCity) setDeliveryCity(parsed.deliveryCity)
+      }
+      
+      if (sessionStorage.getItem('takumi_paid_delivery_fee') === 'true') {
+        setHasPaidDeliveryFee(true)
+      }
+    } catch (e) {
+      // ignore
+    }
   }, [])
+
+  React.useEffect(() => {
+    if (items.length === 0) {
+      sessionStorage.removeItem('takumi_paid_delivery_fee')
+      sessionStorage.removeItem('takumi_checkout_form')
+    }
+  }, [items.length])
 
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -184,7 +254,22 @@ export default function CartPage() {
     return () => observer.disconnect()
   }, [items.length])
 
-  const subtotal = items.reduce((total, item) => {
+  const hasStripeOnly = items.some(i => i.product.allowed_payment_method === 'stripe_only');
+  const hasWhatsAppOnly = items.some(i => i.product.allowed_payment_method === 'whatsapp_only');
+  const hasConflict = hasStripeOnly && hasWhatsAppOnly;
+  
+  const stripeItems = items.filter(item => item.product.allowed_payment_method !== 'whatsapp_only');
+  const whatsappItems = items.filter(item => item.product.allowed_payment_method === 'whatsapp_only');
+
+  const activeItems = hasConflict ? stripeItems : items;
+
+  React.useEffect(() => {
+    if (hasStripeOnly && !hasConflict) setPaymentMethod('Stripe');
+    if (hasWhatsAppOnly && !hasConflict) setPaymentMethod('WhatsApp');
+    if (hasConflict) setPaymentMethod('Stripe'); // Force Stripe first in conflict
+  }, [hasStripeOnly, hasWhatsAppOnly, hasConflict]);
+
+  const subtotal = activeItems.reduce((total, item) => {
     const isAutoWholesale = item.product.is_wholesale && item.product.wholesale_moq && item.quantity >= item.product.wholesale_moq;
     const currentPrice = isAutoWholesale ? item.product.wholesale_price : item.product.retail_price;
     return total + ((currentPrice || 0) * item.quantity)
@@ -218,6 +303,10 @@ export default function CartPage() {
     }
   }
   
+  if (hasPaidDeliveryFee) {
+    deliveryFee = 0;
+  }
+
   const finalTotal = subtotalAfterDiscount + deliveryFee
 
   const handleApplyCoupon = async () => {
@@ -249,9 +338,19 @@ export default function CartPage() {
     
     const formData = new FormData(e.currentTarget)
     
+    // Save form data to prepopulate if they return for WhatsApp split checkout
+    try {
+      sessionStorage.setItem('takumi_checkout_form', JSON.stringify({
+        customerName: formData.get('customerName'),
+        customerPhone: formData.get('customerPhone'),
+        deliveryAddress: formData.get('deliveryAddress'),
+        deliveryCity: deliveryCity
+      }))
+    } catch (e) {}
+    
     if (paymentMethod === 'Stripe') {
       try {
-        const stripeItems = items.map(item => ({
+        const stripeSubmitItems = activeItems.map(item => ({
           productId: item.product.id,
           quantity: item.quantity,
           selectedFlavor: item.product.selected_flavor || null
@@ -261,7 +360,7 @@ export default function CartPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            items: stripeItems,
+            items: stripeSubmitItems,
             customerName: formData.get('customerName'),
             customerPhone: formData.get('customerPhone'),
             deliveryAddress: formData.get('deliveryAddress'),
@@ -304,7 +403,7 @@ export default function CartPage() {
     }
     
     // We pass the coupon ID if applied
-    const result = await placeOrder(formData, items, finalTotal, appliedCoupon?.id)
+    const result = await placeOrder(formData, activeItems, finalTotal, appliedCoupon?.id)
     
     if (result.success) {
       setSuccess(true)
@@ -334,7 +433,7 @@ export default function CartPage() {
         message += `*Delivery:* ${customerAddress}\n\n`
         message += `*Items Ordered:*\n`
         
-        items.forEach(item => {
+        activeItems.forEach(item => {
           const isAutoWholesale = item.product.is_wholesale && item.product.wholesale_moq && item.quantity >= item.product.wholesale_moq;
           const currentPrice = isAutoWholesale ? item.product.wholesale_price : item.product.retail_price;
           const flavorText = item.product.selected_flavor ? ` (${item.product.selected_flavor})` : '';
@@ -422,6 +521,7 @@ export default function CartPage() {
                   key={item.cartItemId || item.product.id} 
                   item={item} 
                   updateQuantity={updateQuantity} 
+                  updateFlavor={updateFlavor}
                   removeFromCart={removeFromCart} 
                 />
               ))}
@@ -479,7 +579,7 @@ export default function CartPage() {
 
                 <div className="space-y-3 mb-6 pt-6 border-t border-gray-100">
                   <div className="flex justify-between text-gray-600 font-medium">
-                    <span>Subtotal ({cartCount} items)</span>
+                    <span>Subtotal ({activeItems.reduce((total, item) => total + item.quantity, 0)} items)</span>
                     <span>¥{subtotal.toLocaleString()}</span>
                   </div>
                   
@@ -494,13 +594,15 @@ export default function CartPage() {
                     <span>Delivery Fee</span>
                     {!settings ? (
                       <span className="text-gray-400">Loading...</span>
+                    ) : hasPaidDeliveryFee ? (
+                      <span className="text-green-600 uppercase font-bold text-sm tracking-widest">Paid (Phase 1)</span>
                     ) : deliveryFee === 0 ? (
                       <span className="text-green-600 uppercase font-bold text-sm tracking-widest">Free</span>
                     ) : (
                       <span>¥{deliveryFee.toLocaleString()}</span>
                     )}
                   </div>
-                  {settings && deliveryFee > 0 && (
+                  {settings && deliveryFee > 0 && !hasPaidDeliveryFee && (
                     <div className="flex items-center gap-2 text-xs font-bold text-[#D4AF37] bg-yellow-50 p-3 rounded-lg border border-yellow-100 uppercase tracking-widest mt-2">
                       <Truck className="w-4 h-4" /> 
                       You're only ¥{(settings.free_shipping_threshold - subtotalAfterDiscount).toLocaleString()} away from Free Shipping!
@@ -520,6 +622,8 @@ export default function CartPage() {
                       type="text" 
                       name="customerName"
                       required
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
                       placeholder="e.g. Taro Yamada"
                       className="w-full bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-xl outline-none focus:bg-white focus:border-black transition-colors"
                     />
@@ -530,31 +634,57 @@ export default function CartPage() {
                       type="tel" 
                       name="customerPhone"
                       required
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder="e.g. 090-1234-5678"
                       className="w-full bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-xl outline-none focus:bg-white focus:border-black transition-colors"
                     />
                   </div>
                   
-                  <div>
+                  <div ref={cityInputRef} className="relative">
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5 ml-1">Delivery City</label>
-                    <input 
-                      type="text"
-                      name="deliveryCity"
-                      required
-                      placeholder="Type your city (e.g. Mobara, Tokyo)"
-                      value={deliveryCity}
-                      onChange={(e) => setDeliveryCity(e.target.value)}
-                      list="city-suggestions"
-                      className="w-full bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-xl outline-none focus:bg-white focus:border-black transition-colors"
-                    />
-                    <datalist id="city-suggestions">
-                      {deliveryZones.map(zone => (
-                        <option key={zone.id} value={zone.city_name}>
-                          {zone.delivery_fee === 0 ? 'Free Delivery' : `¥${zone.delivery_fee}`}
-                        </option>
-                      ))}
-                    </datalist>
-                    {deliveryCity && (
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        name="deliveryCity"
+                        required
+                        placeholder="Type your city (e.g. Mobara, Tokyo)"
+                        value={deliveryCity}
+                        onChange={(e) => {
+                          setDeliveryCity(e.target.value)
+                          setShowCityDropdown(true)
+                        }}
+                        onFocus={() => setShowCityDropdown(true)}
+                        className="w-full bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-xl outline-none focus:bg-white focus:border-black transition-colors"
+                      />
+                      {showCityDropdown && deliveryZones.length > 0 && (
+                        <div className="absolute z-50 w-full mt-2 bg-[#1A1A1A] text-white border border-gray-800 rounded-xl shadow-2xl overflow-hidden max-h-60 overflow-y-auto">
+                          {deliveryZones
+                            .filter(zone => zone.city_name.toLowerCase().includes(deliveryCity.toLowerCase()))
+                            .map(zone => (
+                              <div 
+                                key={zone.id}
+                                onClick={() => {
+                                  setDeliveryCity(zone.city_name)
+                                  setShowCityDropdown(false)
+                                }}
+                                className="px-4 py-3 cursor-pointer hover:bg-black border-b border-gray-800/50 last:border-0 transition-colors"
+                              >
+                                <div className="font-bold text-sm">{zone.city_name}</div>
+                                <div className="text-xs text-gray-400 mt-0.5">
+                                  {zone.delivery_fee === 0 ? 'Free Delivery' : `¥${zone.delivery_fee.toLocaleString()} Delivery`}
+                                </div>
+                              </div>
+                            ))}
+                          {deliveryZones.filter(zone => zone.city_name.toLowerCase().includes(deliveryCity.toLowerCase())).length === 0 && (
+                            <div className="px-4 py-4 text-sm text-gray-400 text-center">
+                              No matching zones found. Standard delivery will apply.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    {deliveryCity && !showCityDropdown && (
                       <p className={`text-xs mt-2 ml-1 font-medium ${isSpecificZone ? 'text-green-600' : 'text-gray-500'}`}>
                         {isSpecificZone 
                           ? (deliveryFee === 0 ? 'Free Delivery Zone!' : `Special Delivery Fee: ¥${deliveryFee.toLocaleString()}`)
@@ -569,6 +699,8 @@ export default function CartPage() {
                       name="deliveryAddress"
                       required
                       rows={3}
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
                       placeholder="Include postal code, prefecture, city, and building name..."
                       className="w-full bg-gray-50 border border-gray-200 text-black px-4 py-3 rounded-xl outline-none focus:bg-white focus:border-black transition-colors resize-none"
                     ></textarea>
@@ -577,33 +709,48 @@ export default function CartPage() {
                   {/* Payment Method Selector */}
                   <div className="pt-2">
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-3 ml-1">Payment Method</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('WhatsApp')}
-                        className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
-                          paymentMethod === 'WhatsApp' 
-                            ? 'border-green-500 bg-green-50 text-green-700 shadow-sm' 
-                            : 'border-gray-100 bg-white hover:border-gray-200 text-gray-500'
-                        }`}
-                      >
-                        <MessageCircle className={`w-6 h-6 mb-2 ${paymentMethod === 'WhatsApp' ? 'text-green-500' : 'text-gray-400'}`} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-center">WhatsApp</span>
-                      </button>
-                      
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('Stripe')}
-                        className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
-                          paymentMethod === 'Stripe' 
-                            ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' 
-                            : 'border-gray-100 bg-white hover:border-gray-200 text-gray-500'
-                        }`}
-                      >
-                        <CreditCard className={`w-6 h-6 mb-2 ${paymentMethod === 'Stripe' ? 'text-blue-500' : 'text-gray-400'}`} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-center">Card / Wallet</span>
-                      </button>
-                    </div>
+                    
+                    {hasConflict ? (
+                      <div className="bg-yellow-50 text-yellow-800 p-4 rounded-xl text-sm font-medium border border-yellow-200 mb-4 flex items-start shadow-sm">
+                        <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0 text-yellow-600 mt-0.5" />
+                        <div>
+                          <strong>Split Checkout</strong><br/>
+                          You are checking out the <strong>Card</strong> items first. You will return here to complete the WhatsApp order.
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`grid ${hasStripeOnly || hasWhatsAppOnly ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
+                        {!hasStripeOnly && (
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod('WhatsApp')}
+                            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                              paymentMethod === 'WhatsApp' 
+                                ? 'border-green-500 bg-green-50 text-green-700 shadow-sm' 
+                                : 'border-gray-100 bg-white hover:border-gray-200 text-gray-500'
+                            }`}
+                          >
+                            <MessageCircle className={`w-6 h-6 mb-2 ${paymentMethod === 'WhatsApp' ? 'text-green-500' : 'text-gray-400'}`} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-center">WhatsApp</span>
+                          </button>
+                        )}
+                        
+                        {!hasWhatsAppOnly && (
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod('Stripe')}
+                            className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                              paymentMethod === 'Stripe' 
+                                ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm' 
+                                : 'border-gray-100 bg-white hover:border-gray-200 text-gray-500'
+                            }`}
+                          >
+                            <CreditCard className={`w-6 h-6 mb-2 ${paymentMethod === 'Stripe' ? 'text-blue-500' : 'text-gray-400'}`} />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-center">Card / Wallet</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {error && (
@@ -621,9 +768,11 @@ export default function CartPage() {
                       ? 'Processing...' 
                       : (settings && !settings.is_store_open) 
                         ? 'Store Currently Closed' 
-                        : paymentMethod === 'WhatsApp' 
-                          ? 'Place Order via WhatsApp' 
-                          : 'Pay Securely with Stripe'}
+                        : hasConflict 
+                          ? 'Checkout Phase 1 (Stripe)'
+                          : paymentMethod === 'WhatsApp' 
+                            ? 'Place Order via WhatsApp' 
+                            : 'Pay Securely with Stripe'}
                   </button>
                 </form>
               </div>

@@ -14,6 +14,8 @@ export interface CartItem {
     wholesale_price?: number | null
     is_wholesale?: boolean
     selected_flavor?: string | null
+    flavor_options?: string[] | null
+    allowed_payment_method?: 'both' | 'stripe_only' | 'whatsapp_only'
   }
   quantity: number
 }
@@ -23,8 +25,11 @@ interface CartContextType {
   addToCart: (product: CartItem['product']) => void
   removeFromCart: (cartItemId: string) => void
   updateQuantity: (cartItemId: string, quantity: number) => void
+  updateFlavor: (cartItemId: string, newFlavor: string) => void
   clearCart: () => void
+  keepOnlyWhatsAppItems: () => void
   cartCount: number
+  isLoaded: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -85,15 +90,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateQuantity = (cartItemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(cartItemId)
-      return
-    }
-    setItems(current =>
-      current.map(item => {
-        const match = item.cartItemId ? item.cartItemId === cartItemId : item.product.id === cartItemId;
-        return match ? { ...item, quantity } : item
-      })
+    setItems(current => {
+      if (quantity <= 0) return current.filter(item => item.cartItemId !== cartItemId)
+      return current.map(item => 
+        item.cartItemId === cartItemId ? { ...item, quantity } : item
+      )
+    })
+  }
+
+  const updateFlavor = (cartItemId: string, newFlavor: string) => {
+    setItems(current => 
+      current.map(item => 
+        item.cartItemId === cartItemId 
+          ? { ...item, product: { ...item.product, selected_flavor: newFlavor } }
+          : item
+      )
     )
   }
 
@@ -101,10 +112,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([])
   }
 
+  const keepOnlyWhatsAppItems = () => {
+    setItems(current => current.filter(item => item.product.allowed_payment_method === 'whatsapp_only'))
+  }
+
   const cartCount = items.reduce((total, item) => total + item.quantity, 0)
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, cartCount }}>
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, updateFlavor, clearCart, keepOnlyWhatsAppItems, cartCount, isLoaded }}>
       {children}
     </CartContext.Provider>
   )

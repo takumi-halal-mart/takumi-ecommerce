@@ -22,10 +22,66 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
   // Await the params to get the id (Next.js 15 requirement for dynamic routes)
   const { id } = await params
   
-  const { data: order, error } = await getOrderById(id)
+  const { data: baseOrder, error } = await getOrderById(id)
 
-  if (error || !order) {
+  if (error || !baseOrder) {
     notFound()
+  }
+
+  const supabase = await createClient()
+
+  // Find other orders from the same session (Split Checkout)
+  const baseOrderTime = new Date(baseOrder.created_at).getTime()
+  const windowStart = new Date(baseOrderTime - 1000 * 60 * 30).toISOString()
+  const windowEnd = new Date(baseOrderTime + 1000 * 60 * 30).toISOString()
+  
+  const { data: groupOrders } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      order_items (
+        id,
+        quantity,
+        price_at_purchase,
+        selected_flavor,
+        products (
+          name,
+          image_url
+        )
+      )
+    `)
+    .eq('customer_phone', baseOrder.customer_phone)
+    .gte('created_at', windowStart)
+    .lte('created_at', windowEnd)
+    .order('created_at', { ascending: true })
+
+  let order = baseOrder as any;
+  let mergedItems: any[] = [];
+  let paymentMethods = new Set<string>();
+  let totalAmount = 0;
+  let allOrderIds: string[] = [baseOrder.id];
+
+  if (groupOrders && groupOrders.length > 0) {
+    order = groupOrders[0];
+    allOrderIds = [];
+    groupOrders.forEach(go => {
+      totalAmount += go.total_amount;
+      paymentMethods.add(go.payment_method);
+      if (go.order_items) {
+        mergedItems = [...mergedItems, ...go.order_items];
+      }
+      allOrderIds.push(go.id);
+    });
+    
+    order = {
+      ...order,
+      total_amount: totalAmount,
+      order_items: mergedItems,
+      payment_methods_array: Array.from(paymentMethods)
+    };
+  } else {
+    order.order_items = baseOrder.order_items || [];
+    order.payment_methods_array = [baseOrder.payment_method];
   }
 
   const orderDate = new Date(order.created_at)
@@ -33,25 +89,24 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
   const formattedTime = orderDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
   // Calculate Subtotal (since total_amount might include delivery fee)
-  const subtotal = order.order_items?.reduce((sum, item) => sum + (item.quantity * item.price_at_purchase), 0) || 0
+  const subtotal = order.order_items?.reduce((sum: number, item: any) => sum + (item.quantity * item.price_at_purchase), 0) || 0
   
   // Attempt to find if a coupon was used during this exact order checkout
-  const supabase = await createClient()
   const serviceClient = createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY! || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   
   const orderTime = new Date(order.created_at)
-  const windowStart = new Date(orderTime.getTime() - 60000).toISOString() // 1 min before
-  const windowEnd = new Date(orderTime.getTime() + 60000).toISOString()   // 1 min after
+  const couponWindowStart = new Date(orderTime.getTime() - 60000).toISOString() // 1 min before
+  const couponWindowEnd = new Date(orderTime.getTime() + 60000).toISOString()   // 1 min after
   
   const { data: usages } = await serviceClient
     .from('coupon_usages')
     .select('*, coupons(*)')
     .eq('customer_phone', order.customer_phone)
-    .gte('used_at', windowStart)
-    .lte('used_at', windowEnd)
+    .gte('used_at', couponWindowStart)
+    .lte('used_at', couponWindowEnd)
     .limit(1)
 
   let discountAmount = 0
@@ -93,7 +148,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
         {/* Action Controls */}
         <div className="flex items-center gap-4 bg-brand-dark p-2 rounded-xl border border-brand-border">
           <span className="text-sm font-bold text-gray-400 uppercase tracking-widest pl-2">Status:</span>
-          <StatusDropdown orderId={order.id} currentStatus={order.status} />
+          <StatusDropdown orderIds={allOrderIds} currentStatus={order.status} />
         </div>
       </div>
 
@@ -162,9 +217,13 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
             
             <div className="mt-6 pt-6 border-t border-brand-border flex justify-between items-center">
               <span className="text-xs text-gray-500 uppercase tracking-widest">Payment Method</span>
-              <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-green-950/30 text-green-400 border border-green-900/50">
-                {order.payment_method}
-              </span>
+              <div className="flex gap-2">
+                {order.payment_methods_array.map((pm: string) => (
+                  <span key={pm} className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest bg-brand-gray/50 text-white border border-brand-border/50">
+                    {pm}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -182,7 +241,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsProps) {
             
             <div className="p-6">
               <div className="space-y-4">
-                {order.order_items?.map((item) => (
+                {order.order_items?.map((item: any) => (
                   <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-4 bg-brand-gray/20 p-4 rounded-xl border border-brand-border/30 hover:bg-brand-gray/40 transition-colors group">
                     <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-brand-dark rounded-lg overflow-hidden border border-brand-border shrink-0 flex items-center justify-center">
                       {item.products?.image_url ? (
