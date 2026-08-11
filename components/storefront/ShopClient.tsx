@@ -69,6 +69,15 @@ export function ShopClient({ initialProducts, initialTotalCount, categories, ini
   const hasMore = products.length < totalCount
   const allCategories = [{ id: 'all', name: 'All', created_at: '' }, ...categories]
 
+  const categoryIntros: Record<string, string> = {
+    "Meat & Poultry": "Our Halal Meat & Poultry range includes 100% halal-certified chicken, lamb, beef, and specialty cuts sourced from verified halal suppliers. All products meet Japan's import and halal certification standards. Available for retail purchase and wholesale bulk orders.",
+    "Spices & Herbs": "Discover authentic South Asian and Middle Eastern spices and herbs. From rich curry powders to whole aromatic spices, essential for your traditional recipes.",
+    "Fresh Produce": "Fresh, seasonal vegetables and fruits imported directly from Sri Lanka and local Japanese farms, ensuring the highest quality for your daily meals.",
+    "Beverages": "Explore our selection of refreshing beverages, including authentic Sri Lankan teas, juices, and popular Japanese drinks.",
+    "Rice & Grains": "Premium quality rice, lentils, and grains. Staple ingredients for biryani, everyday meals, and traditional South Asian cuisine.",
+    "Household": "Everyday household essentials and cleaning products to keep your home running smoothly."
+  };
+
   return (
     <>
       {/* 1. Hero Header */}
@@ -198,6 +207,14 @@ export function ShopClient({ initialProducts, initialTotalCount, categories, ini
           {/* 3. Product Grid */}
           <div className="w-full md:w-3/4">
             
+            {activeCategory !== 'All' && categoryIntros[activeCategory] && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <p className="text-gray-700 text-sm md:text-base leading-relaxed">
+                  {categoryIntros[activeCategory]}
+                </p>
+              </div>
+            )}
+
             {/* Desktop Sorting Header */}
             <div className="hidden md:flex justify-between items-center mb-6">
               <span className="text-sm text-gray-500 font-medium">Showing {products.length} of {totalCount} results</span>

@@ -2,10 +2,14 @@ import Link from 'next/link'
 import { getStoreCategories } from '@/app/actions/storefront'
 import { ArrowRight, Sparkles } from 'lucide-react'
 
-export const metadata = {
-  title: 'Categories | Takumi Marketplace',
-  description: 'Explore our premium selection by category.',
-}
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: "Shop by Category — Halal Meat, Sri Lankan Spices, Beverages & More",
+  description:
+    "Explore Takumi Halal Mart by category: Meat & Poultry, Spices & Herbs, Fresh Produce, Beverages, Rice & Grains, and Household essentials. All 100% halal certified.",
+  alternates: { canonical: "https://www.takumihalalmart.store/categories" },
+};
 
 export default async function CategoriesPage() {
   const categoriesRes = await getStoreCategories()

@@ -1,8 +1,12 @@
 import Link from 'next/link';
 
-export const metadata = {
-  title: '特定商取引法に基づく表記 - Specified Commercial Transactions Act',
-  description: 'Legal information and Specified Commercial Transactions Act details for Takumi Halal Mart.',
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "特定商取引法に基づく表記 | Tokushoho Disclosure",
+  description:
+    "特定商取引法に基づく表記。Takumi Halal Mart の販売業者情報、返品・キャンセルポリシー、配送情報などを掲載しています。",
+  alternates: { canonical: "https://www.takumihalalmart.store/tokushoho" },
 };
 
 export default function TokushohoPage() {

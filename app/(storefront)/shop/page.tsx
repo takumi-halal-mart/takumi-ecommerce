@@ -4,20 +4,11 @@ import { ShopClient } from '@/components/storefront/ShopClient'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Shop All Products | Takumi Marketplace',
-  description: 'Browse our premium collection of authentic groceries, meat, spices, and daily essentials at Takumi Marketplace.',
-  openGraph: {
-    title: 'Shop All Products | Takumi Marketplace',
-    description: 'Browse our premium collection of authentic groceries, meat, and essentials.',
-    url: 'https://takumihalalmart.store/shop',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Shop All Products | Takumi Marketplace',
-    description: 'Browse our premium collection of authentic groceries, meat, and essentials.',
-  }
-}
+  title: "Shop All Halal Products — Meat, Spices, Produce & More",
+  description:
+    "Browse our full catalog of halal-certified groceries. Fresh meat and poultry, authentic Sri Lankan spices, beverages, rice, grains, and household items. Best prices in Japan.",
+  alternates: { canonical: "https://www.takumihalalmart.store/shop" },
+};
 
 export default async function ShopPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>

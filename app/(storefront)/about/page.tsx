@@ -1,10 +1,14 @@
 import Image from 'next/image'
 import { MapPin, Clock, Star, ArrowRight, Quote } from 'lucide-react'
 
-export const metadata = {
-  title: 'About Us | Takumi Halal Mart',
-  description: 'Our journey from a motor company to Japan’s premier authentic Sri Lankan and Halal grocery destination.',
-}
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: "Our Story — From Kabir Motors to Japan's Halal Grocery Leader",
+  description:
+    "Learn how Takumi Halal Mart grew from a vehicle export company in 2016 to opening Chiba's premier halal grocery store in March 2026. Serving the Muslim and Sri Lankan community in Japan.",
+  alternates: { canonical: "https://www.takumihalalmart.store/about" },
+};
 
 export default function AboutPage() {
   return (

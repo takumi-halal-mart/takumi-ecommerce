@@ -4,24 +4,31 @@ import { getActiveBanners, getStoreCategories, getFeaturedProducts, getHomepageC
 import { MarketplaceCard } from '@/components/storefront/MarketplaceCard'
 import { HeroCarousel } from '@/components/storefront/HeroCarousel'
 import { ArrowRight, ShoppingBag } from 'lucide-react'
+import { JsonLd } from "@/components/storefront/JsonLd";
 
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Takumi | Premium Wholesale & Retail Marketplace',
-  description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials. Shop wholesale and retail at the best prices.',
-  openGraph: {
-    title: 'Takumi | Premium Wholesale & Retail Marketplace',
-    description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials.',
-    url: 'https://takumihalalmart.store',
-    type: 'website',
+  title: "Japan's Premier Halal Grocery — Online & Chiba Store",
+  description:
+    "Shop halal meat, fresh Sri Lankan vegetables, spices, and daily essentials at Takumi Halal Mart. Located in Togane, Chiba. Wholesale and retail available. Order online for Japan-wide delivery.",
+  alternates: { canonical: "https://www.takumihalalmart.store" },
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Takumi Halal Mart",
+  url: "https://www.takumihalalmart.store",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://www.takumihalalmart.store/shop?search={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Takumi | Premium Wholesale & Retail Marketplace',
-    description: 'Experience Japan\'s finest selection of fresh meat, authentic spices, and daily essentials.',
-  }
-}
+};
 
 export default async function StorefrontPage() {
   const [bannersRes, categoriesRes, productsRes, categoryProductsRes] = await Promise.all([
@@ -135,40 +142,25 @@ export default async function StorefrontPage() {
         })}
       </div>
       
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "Organization",
-                "@id": "https://takumihalalmart.store/#organization",
-                "name": "Takumi E-Commerce",
-                "url": "https://takumihalalmart.store",
-                "logo": {
-                  "@type": "ImageObject",
-                  "url": "https://takumihalalmart.store/icon.png"
-                },
-                "contactPoint": {
-                  "@type": "ContactPoint",
-                  "contactType": "customer support"
-                }
-              },
-              {
-                "@type": "WebSite",
-                "@id": "https://takumihalalmart.store/#website",
-                "url": "https://takumihalalmart.store",
-                "name": "Takumi",
-                "description": "Premium Wholesale & Retail E-Commerce Marketplace",
-                "publisher": {
-                  "@id": "https://takumihalalmart.store/#organization"
-                }
-              }
-            ]
-          })
-        }}
-      />
+      {/* SECTION 5: ABOUT TAKUMI HALAL MART */}
+      <section className="px-4 pb-12">
+        <div className="max-w-7xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+          <h2 className="text-xl md:text-2xl font-black text-black tracking-tight uppercase mb-4">
+            About Takumi Halal Mart
+          </h2>
+          <p className="text-gray-700 leading-relaxed font-medium">
+            Takumi Halal Mart is a halal-certified grocery store in Togane-shi, Chiba, Japan. 
+            We stock over 1000 halal products including fresh and frozen halal meat, 
+            Sri Lankan vegetables and fruit, South Asian spices, Japanese beverages, 
+            and everyday household items. Our store is open daily until 10 PM. 
+            We ship orders across Japan. 
+            Wholesale accounts are available for restaurants and businesses — 
+            register at takumihalalmart.store/wholesale.
+          </p>
+        </div>
+      </section>
+      
+      <JsonLd data={websiteSchema} />
     </div>
   )
 }

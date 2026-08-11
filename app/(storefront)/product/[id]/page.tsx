@@ -1,10 +1,12 @@
-import { getProductById, getRelatedProducts } from '@/app/actions/storefront'
+import { getProductById, getRelatedProducts, getAllRetailProducts } from '@/app/actions/storefront'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ShieldCheck, Truck, Zap, TrendingUp } from 'lucide-react'
 import { ProductActions } from '@/components/storefront/ProductActions'
 import { ProductGallery } from '@/components/storefront/ProductGallery'
 import { MarketplaceCard } from '@/components/storefront/MarketplaceCard'
+import { BASE_URL, SITE_NAME } from "@/utils/seo"
+import { JsonLd } from "@/components/storefront/JsonLd"
 
 import { Metadata } from 'next'
 
@@ -13,22 +15,42 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const { data: product } = await getProductById(id)
   if (!product) return { title: 'Product Not Found | Takumi' }
   
-  return { 
-    title: `${product.name} | Takumi Marketplace`,
-    description: product.description || `Buy ${product.name} at Takumi Marketplace. Premium quality, best prices.`,
+  const title = `${product.name} — Halal ${product.category} in Japan`
+  const description = product.description
+    ? `${product.description} Available at Takumi Halal Mart, Chiba, Japan. Halal certified. Retail and wholesale pricing.`
+    : `Buy ${product.name} at Takumi Halal Mart. 100% halal certified ${product.category}. Delivered across Japan.`
+  
+  const imageUrl = product.image_url || `${BASE_URL}/og-default.png`
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${BASE_URL}/product/${id}`,
+    },
     openGraph: {
-      title: `${product.name} | Takumi`,
-      description: product.description || `Buy ${product.name} at Takumi Marketplace.`,
-      images: [{ url: product.image_url || '/takumi_white.png' }],
-      type: 'website',
+      title,
+      description,
+      url: `${BASE_URL}/product/${id}`,
+      siteName: SITE_NAME,
+      images: [{ url: imageUrl, width: 800, height: 800, alt: product.name }],
+      type: "website",
     },
     twitter: {
-      card: 'summary_large_image',
-      title: `${product.name} | Takumi`,
-      description: product.description || `Buy ${product.name} at Takumi Marketplace.`,
-      images: [product.image_url || '/takumi_white.png'],
-    }
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
   }
+}
+
+export async function generateStaticParams() {
+  const { data: products } = await getAllRetailProducts()
+  if (!products) return []
+  return products.map((p) => ({
+    id: p.id,
+  }))
 }
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
@@ -42,6 +64,51 @@ export default async function ProductPage({ params }: { params: { id: string } }
   const { data: relatedProducts } = await getRelatedProducts(product.category, product.id)
   const isLowStock = product.stock_count > 0 && product.stock_count <= 15
   const isOutOfStock = product.stock_count <= 0
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: product.image_url ? [product.image_url] : [],
+    description: product.description || `Buy ${product.name} at Takumi Halal Mart.`,
+    sku: product.id,
+    brand: {
+      "@type": "Brand",
+      name: "Takumi Halal Mart",
+    },
+    offers: {
+      "@type": "Offer",
+      url: `${BASE_URL}/product/${product.id}`,
+      priceCurrency: "JPY",
+      price: product.retail_price,
+      availability:
+        product.stock_count > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      seller: {
+        "@type": "Organization",
+        name: "Takumi Halal Mart",
+      },
+    },
+    additionalProperty: [
+      {
+        "@type": "PropertyValue",
+        name: "Halal Certified",
+        value: "Yes",
+      },
+    ],
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: BASE_URL },
+      { "@type": "ListItem", position: 2, name: "Shop", item: `${BASE_URL}/shop` },
+      { "@type": "ListItem", position: 3, name: product.category, item: `${BASE_URL}/shop?category=${encodeURIComponent(product.category)}` },
+      { "@type": "ListItem", position: 4, name: product.name, item: `${BASE_URL}/product/${product.id}` },
+    ],
+  };
 
   return (
     <div className="bg-[#F8F9FA] min-h-screen pb-32 md:pb-24">
@@ -170,31 +237,8 @@ export default async function ProductPage({ params }: { params: { id: string } }
 
       </div>
       
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org/",
-            "@type": "Product",
-            "name": product.name,
-            "image": product.image_url ? [product.image_url] : [],
-            "description": product.description || `Premium ${product.name} at Takumi Marketplace.`,
-            "sku": product.id,
-            "offers": {
-              "@type": "Offer",
-              "url": `https://takumihalalmart.store/product/${product.id}`,
-              "priceCurrency": "JPY",
-              "price": product.retail_price,
-              "itemCondition": "https://schema.org/NewCondition",
-              "availability": product.stock_count > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-              "seller": {
-                "@type": "Organization",
-                "name": "Takumi"
-              }
-            }
-          })
-        }}
-      />
+      <JsonLd data={productSchema} />
+      <JsonLd data={breadcrumbSchema} />
     </div>
   )
 }

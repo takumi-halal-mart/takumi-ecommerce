@@ -1,12 +1,15 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/admin/', '/api/', '/cart', '/checkout'],
-    },
-    sitemap: 'https://takumihalalmart.store/sitemap.xml',
-  }
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/admin/", "/api/", "/cart", "/checkout"],
+      },
+    ],
+    sitemap: "https://www.takumihalalmart.store/sitemap.xml",
+    host: "https://www.takumihalalmart.store",
+  };
 }

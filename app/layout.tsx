@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { DEFAULT_METADATA, SITE_NAME, BASE_URL, DEFAULT_OG_IMAGE } from "@/utils/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,54 +14,58 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://takumihalalmart.store"),
+  ...DEFAULT_METADATA,
   title: {
-    template: "%s | Takumi",
-    default: "Takumi | Premium Wholesale & Retail E-Commerce",
+    default: `${SITE_NAME} | Japan's Premier Halal Grocery Store`,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: "Discover premium quality products at Takumi. Your trusted marketplace for wholesale and retail, offering the best prices and high-velocity catalog.",
-  keywords: ["ecommerce", "wholesale", "retail", "marketplace", "premium products", "Takumi", "online shopping"],
-  authors: [{ name: "Takumi E-Commerce" }],
-  creator: "Takumi",
-  publisher: "Takumi Marketplace",
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
+  description:
+    "Takumi Halal Mart in Chiba, Japan — 100% halal certified meats, fresh Sri Lankan produce, authentic spices, and daily essentials. Retail and wholesale available. Delivery across Japan.",
+  keywords: [
+    "halal grocery Japan",
+    "halal meat Chiba",
+    "Sri Lankan food Japan",
+    "halal supermarket Japan",
+    "Muslim grocery Japan",
+    "halal food online Japan",
+    "チバ ハラール",
+    "ハラール食品 日本",
+    "タクミ ハラール",
+    "wholesale halal Japan",
+  ],
   openGraph: {
-    title: "Takumi | Premium Wholesale & Retail E-Commerce",
-    description: "Discover premium quality products at Takumi. Your trusted marketplace for wholesale and retail.",
-    url: "https://takumihalalmart.store",
-    siteName: "Takumi",
+    type: "website",
+    locale: "en_US",
+    alternateLocale: ["ja_JP"],
+    url: BASE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} | Japan's Premier Halal Grocery Store`,
+    description:
+      "100% halal certified meats, fresh Sri Lankan produce, spices and essentials. Shop online or visit us in Chiba, Japan.",
     images: [
       {
-        url: "/takumi_white.png",
+        url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: "Takumi E-Commerce Logo",
+        alt: "Takumi Halal Mart — Japan's Premier Halal Grocery Store",
       },
     ],
-    locale: "en_US",
-    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Takumi | Premium Wholesale & Retail E-Commerce",
-    description: "Discover premium quality products at Takumi. Your trusted marketplace for wholesale and retail.",
-    images: ["/takumi_white.png"],
-    creator: "@TakumiMarket",
+    title: `${SITE_NAME} | Japan's Premier Halal Grocery Store`,
+    description:
+      "100% halal certified meats, fresh Sri Lankan produce, spices and essentials delivered across Japan.",
+    images: [DEFAULT_OG_IMAGE],
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+  alternates: {
+    languages: {
+      "en": "https://www.takumihalalmart.store",
+      "ja": "https://www.takumihalalmart.store",
     },
+  },
+  verification: {
+    google: "YOUR_GOOGLE_VERIFICATION_CODE", // from Search Console
   },
 };
 

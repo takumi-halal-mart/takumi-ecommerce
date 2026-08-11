@@ -1,8 +1,13 @@
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Frequently Asked Questions - Takumi Halal Mart',
-  description: 'Find answers to common questions about Takumi Halal Mart products, shipping, and returns.',
+import { Metadata } from 'next';
+import { JsonLd } from "@/components/storefront/JsonLd";
+
+export const metadata: Metadata = {
+  title: "FAQ — Delivery, Halal Certification, Wholesale & More",
+  description:
+    "Answers to common questions about Takumi Halal Mart: delivery areas across Japan, halal certification standards, wholesale registration, returns, and store hours.",
+  alternates: { canonical: "https://www.takumihalalmart.store/faq" },
 };
 
 const faqs = [
@@ -33,8 +38,22 @@ const faqs = [
 ];
 
 export default function FAQPage() {
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(faq => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] py-16 md:py-24 px-4 sm:px-6 lg:px-8">
+      <JsonLd data={faqSchema} />
       <div className="max-w-3xl mx-auto">
         
         <div className="text-center mb-16">

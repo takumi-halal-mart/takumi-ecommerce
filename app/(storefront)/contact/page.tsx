@@ -1,9 +1,13 @@
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Contact Us - Takumi Halal Mart',
-  description: 'Get in touch with Takumi Halal Mart. View our contact details and business hours.',
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Contact Takumi Halal Mart — Get in Touch",
+  description:
+    "Contact us for product enquiries, wholesale orders, or general support. Visit us in Togane, Chiba, or reach out online.",
+  alternates: { canonical: "https://www.takumihalalmart.store/contact" },
 };
 
 export default function ContactPage() {

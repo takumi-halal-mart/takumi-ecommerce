@@ -14,6 +14,7 @@ export interface MarketplaceCardProps {
     stock_count: number
     image_url: string | null
     unit_type?: string | null
+    category: string
   }
 }
 
@@ -36,7 +37,7 @@ export function MarketplaceCard({ product }: MarketplaceCardProps) {
           {product.image_url ? (
             <Image 
               src={product.image_url} 
-              alt={product.name} 
+              alt={`${product.name} — Halal ${product.category} available at Takumi Halal Mart Japan`} 
               fill 
               unoptimized
               className="object-cover group-hover:scale-105 transition-transform duration-500"
