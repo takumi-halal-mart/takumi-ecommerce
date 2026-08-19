@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const BASE = "https://www.takumihalalmart.store";
@@ -17,14 +17,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Dynamic product routes
-  const supabase = await createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+  
   const { data: products } = await supabase
-    .from("products") // adjust to your actual table name
-    .select("id, updated_at");
+    .from("products")
+    .select("id, created_at")
+    .eq("is_retail", true);
 
   const productRoutes: MetadataRoute.Sitemap = (products ?? []).map((p: any) => ({
     url: `${BASE}/product/${p.id}`,
-    lastModified: new Date(p.updated_at || Date.now()),
+    lastModified: new Date(p.created_at || Date.now()),
     changeFrequency: "weekly",
     priority: 0.8,
   }));

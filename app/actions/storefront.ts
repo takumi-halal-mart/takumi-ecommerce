@@ -1,6 +1,12 @@
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+const createPublicClient = () => createSupabaseClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export interface StorefrontBanner {
   id: string
@@ -42,7 +48,7 @@ export interface StorefrontProduct {
  */
 export async function getActiveBanners() {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     
     const { data, error } = await supabase
       .from('promotional_banners')
@@ -67,7 +73,7 @@ export async function getActiveBanners() {
  */
 export async function getStoreCategories() {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     
     const { data, error } = await supabase
       .from('categories')
@@ -92,7 +98,7 @@ export async function getStoreCategories() {
  */
 export async function getFeaturedProducts() {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     
     const { data, error } = await supabase
       .from('products')
@@ -129,7 +135,7 @@ export async function getHomepageCategoryProducts() {
   ]
 
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     
     const { data, error } = await supabase
       .from('products')
@@ -175,7 +181,7 @@ export interface StoreSettings {
 
 export async function getStoreSettings() {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error } = await supabase
       .from('store_settings')
       .select('*')
@@ -196,7 +202,7 @@ export async function getStoreSettings() {
 
 export async function getProductById(productId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -218,7 +224,7 @@ export async function getProductById(productId: string) {
 
 export async function getRelatedProducts(category: string, excludeId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -241,7 +247,7 @@ export async function getRelatedProducts(category: string, excludeId: string) {
 
 export async function getAllRetailProducts() {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -269,7 +275,7 @@ export async function getPaginatedRetailProducts(
   sortMethod: string = 'newest'
 ) {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     let query = supabase.from('products').select('*', { count: 'exact' }).eq('is_retail', true)
 
     if (category !== 'All') {
@@ -306,7 +312,7 @@ export async function getPaginatedRetailProducts(
 
 export async function getWholesaleProducts() {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data, error } = await supabase
       .from('products')
       .select('*')
@@ -327,7 +333,7 @@ export async function getWholesaleProducts() {
 
 export async function validateCouponCode(code: string, subtotal: number) {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     const { data: coupon, error } = await supabase
       .from('coupons')
       .select('*')
@@ -378,7 +384,7 @@ export async function validateCouponCode(code: string, subtotal: number) {
 
 export async function submitWholesaleInquiry(formData: FormData) {
   try {
-    const supabase = await createClient()
+    const supabase = createPublicClient()
     
     const businessName = formData.get('businessName') as string
     const contactPerson = formData.get('contactPerson') as string
